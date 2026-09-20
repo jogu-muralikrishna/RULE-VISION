@@ -33,15 +33,13 @@ function getLocalInspections(): InspectionRecord[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!raw) {
-      const initial = DEMO_INSPECTIONS.map(normalizeRecord);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      return [];
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalizeRecord) : DEMO_INSPECTIONS.map(normalizeRecord);
+    return Array.isArray(parsed) ? parsed.map(normalizeRecord) : [];
   } catch (e) {
     console.error('Error reading local inspections:', e);
-    return DEMO_INSPECTIONS.map(normalizeRecord);
+    return [];
   }
 }
 
@@ -165,10 +163,9 @@ export const dbService = {
 
   async resetToDemoData(): Promise<void> {
     try {
-      const normalized = DEMO_INSPECTIONS.map(normalizeRecord);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalized));
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
     } catch (e) {
-      console.error('Failed to reset demo data:', e);
+      console.error('Failed to clear inspections:', e);
     }
   },
 

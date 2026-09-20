@@ -152,9 +152,9 @@ export const authService = {
   },
 
   /**
-   * Sign up new user (defaults strictly to 'consumer' role per SIH requirements)
+   * Sign up new user with selected role (consumer or inspector)
    */
-  async signUp(email: string, password: string): Promise<AuthResponse> {
+  async signUp(email: string, password: string, role: UserRole = 'consumer'): Promise<AuthResponse> {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !password) {
       return { success: false, error: 'Email and password are required.' };
@@ -171,7 +171,7 @@ export const authService = {
           email: cleanEmail,
           password,
           options: {
-            data: { role: 'consumer' }
+            data: { role }
           }
         });
 
@@ -186,7 +186,7 @@ export const authService = {
               {
                 id: data.user.id,
                 email: cleanEmail,
-                role: 'consumer',
+                role,
                 created_at: new Date().toISOString()
               }
             ]);
@@ -197,7 +197,7 @@ export const authService = {
           const profile: UserProfile = {
             id: data.user.id,
             email: cleanEmail,
-            role: 'consumer',
+            role,
             created_at: new Date().toISOString()
           };
           this.setLocalSession(profile);
@@ -212,7 +212,7 @@ export const authService = {
     const newUser: UserProfile = {
       id: `usr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       email: cleanEmail,
-      role: 'consumer', // Default new users strictly to consumer per spec
+      role,
       created_at: new Date().toISOString()
     };
 

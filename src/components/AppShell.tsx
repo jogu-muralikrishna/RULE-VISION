@@ -86,7 +86,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
           <Info className="w-3.5 h-3.5 text-[#FF2638] shrink-0" />
           <span className="truncate">
-            <strong className="text-white font-semibold">Statutory Notice:</strong> RuleVision is an AI-assisted screening tool. Final legal determination must be made by an authorized Legal Metrology officer under PCR 2011.
+            <strong className="text-white font-semibold">Statutory Notice:</strong> RuleVision is an AI-assisted screening tool. Final legal determination must be made by an authorized Legal Metrology officer under applicable rules.
           </span>
         </div>
       </div>
@@ -340,9 +340,9 @@ export const AppShell: React.FC<AppShellProps> = ({
             {children}
           </div>
           <footer className="pt-12 pb-4 text-center text-xs text-slate-400 dark:text-slate-600 border-t border-slate-200 dark:border-slate-800 mt-12">
-            <p className="font-semibold text-slate-600 dark:text-slate-400">Team RuleVision</p>
+            <p className="font-semibold text-slate-600 dark:text-slate-400">RuleVision</p>
             <p className="text-[11px] mt-0.5">
-              Smart India Hackathon 2026 • SIH Problem Statement 26034
+              AI-Powered Legal Metrology Compliance Inspection Platform
             </p>
           </footer>
         </main>

@@ -172,7 +172,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
         </div>
       </div>
 
-      {/* Real-time Visual Verification: Red Tags for Missing, Blurred, or Non-Compliant Text (SIH Slide 2) */}
+      {/* Real-time Visual Verification: Red Tags for Missing, Blurred, or Non-Compliant Text */}
       {complianceResults.some(r => r.status !== 'PASS') && (
         <div className="bg-slate-950/95 border-t border-slate-800 px-3 py-2 flex flex-wrap items-center gap-2 z-10">
           <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5 shrink-0">

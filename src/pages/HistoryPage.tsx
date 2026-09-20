@@ -47,7 +47,6 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
       // Status filter
       const matchesStatus =
         statusFilter === 'ALL' ||
-        (statusFilter === 'DEMO' && item.is_demo) ||
         item.overall_status === statusFilter;
 
       return matchesSearch && matchesStatus;
@@ -122,7 +121,6 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
             { id: 'COMPLIANT', label: 'Compliant' },
             { id: 'NON_COMPLIANT', label: 'Non-Compliant' },
             { id: 'NEEDS_REVIEW', label: 'Needs Review' },
-            { id: 'DEMO', label: 'Demo Cases' },
           ].map(filter => (
             <button
               key={filter.id}
@@ -170,11 +168,6 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                       <div className="font-mono font-bold text-slate-900 dark:text-white">
                         {item.inspection_code}
                       </div>
-                      {item.is_demo && (
-                        <span className="inline-block mt-0.5 text-[9px] font-bold uppercase bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
-                          Demo
-                        </span>
-                      )}
                     </td>
 
                     <td className="px-6 py-4">

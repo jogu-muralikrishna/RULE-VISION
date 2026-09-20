@@ -33,7 +33,7 @@ app.get('/api/status', (req: Request, res: Response) => {
     team: 'RuleVision',
     version: '1.0.0',
     deployment: 'Vercel Serverless',
-    problemStatementId: 'SIH26034',
+    category: 'Legal Metrology Compliance Auditor',
     visionAi: {
       configured: hasGeminiKey,
       model: 'gemini-2.5-flash',

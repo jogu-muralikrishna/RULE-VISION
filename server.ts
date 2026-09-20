@@ -40,7 +40,7 @@ async function startServer() {
       app: 'RuleVision',
       team: 'RuleVision',
       version: '1.0.0',
-      problemStatementId: 'SIH26034',
+      category: 'Legal Metrology Compliance Auditor',
       visionAi: {
         configured: hasGeminiKey,
         model: 'gemini-2.5-flash',

@@ -154,10 +154,11 @@ export default function App() {
     );
   }
 
-  // 2. CONSUMER DASHBOARD (Separate experience, no inspector stats/history)
+  // 2. CONSUMER DASHBOARD (Citizen experience with saved real-time inspections)
   if (currentUser.role === 'consumer') {
     return (
       <ConsumerQuickCheckPage
+        currentUser={currentUser}
         onLogout={handleLogout}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}

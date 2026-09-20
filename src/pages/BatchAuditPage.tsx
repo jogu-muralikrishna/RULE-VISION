@@ -15,7 +15,6 @@ import {
 import { BatchItem, InspectionRecord } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
 import { dbService } from '../services/db';
-import { DEMO_INSPECTIONS } from '../data/demoData';
 import { analyzeProductImage } from '../services/inspectionService';
 
 interface BatchAuditPageProps {
@@ -50,19 +49,6 @@ export const BatchAuditPage: React.FC<BatchAuditPageProps> = ({ onSelectInspecti
       };
       reader.readAsDataURL(file);
     });
-  };
-
-  // Pre-load demo batch for instant demonstration
-  const handleLoadDemoBatch = () => {
-    const demoItems: BatchItem[] = DEMO_INSPECTIONS.map((demo, idx) => ({
-      id: `batch_demo_${idx}`,
-      fileName: `${demo.product_name.replace(/\s+/g, '_')}.jpg`,
-      fileSize: 245000,
-      dataUrl: demo.image_url,
-      status: 'completed',
-      inspection: demo
-    }));
-    setBatchItems(demoItems);
   };
 
   // Run batch audit sequentially with resilient fault-tolerance
@@ -200,18 +186,8 @@ export const BatchAuditPage: React.FC<BatchAuditPageProps> = ({ onSelectInspecti
             Batch Compliance Audit
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Process multiple packaged commodity images concurrently or sequentially with automated PCR 2011 checks.
+            Process multiple packaged commodity images concurrently or sequentially with automated Legal Metrology compliance checks.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleLoadDemoBatch}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors"
-          >
-            Load 3 Demo Commodities
-          </button>
         </div>
       </div>
 

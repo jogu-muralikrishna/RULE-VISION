@@ -1,7 +1,6 @@
 /**
- * RuleVision Types & Interfaces
- * AI-Powered Legal Metrology (Packaged Commodities) Rules, 2011 Auditor
- * SIH Problem Statement 26034
+ * RuleVision Type Definitions
+ * AI-Powered Legal Metrology Packaged Commodities Rules Auditor
  */
 
 export type ComplianceStatus = 'PASS' | 'FAIL' | 'NEEDS_REVIEW' | 'NOT_APPLICABLE';

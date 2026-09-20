@@ -54,8 +54,6 @@ import { ComplianceCheckCard } from '../components/ComplianceCheckCard';
 import { ImageViewer } from '../components/ImageViewer';
 import { ViolationPanel } from '../components/ViolationPanel';
 import { InspectionSummary } from '../components/InspectionSummary';
-import { StatusBadge } from '../components/StatusBadge';
-import { DEMO_INSPECTIONS } from '../data/demoData';
 import { dbService } from '../services/db';
 import { BarcodeScanner } from '../components/BarcodeScanner';
 import { generateComplianceReportPDF, generateLegalNoticePDF } from '../utils/pdfExport';
@@ -797,34 +795,6 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
     }
   };
 
-  // Demo Presets loader
-  const handleLoadDemo = (preset: InspectionRecord) => {
-    setImageSrc(preset.image_url);
-    setImageFileName(preset.product_name);
-    setImageFileSize('~120 KB');
-    setImageSourceType('upload');
-    setIsDemoMode(true);
-    setPackagingGeometry(preset.packaging_geometry || 'flat');
-    setMultiAngleImages(preset.multi_angle_images || [{ id: 'demo-1', dataUrl: preset.image_url, angleLabel: 'Front View', timestamp: Date.now() }]);
-    setActiveInspection(preset);
-    setQualityReport({
-      isValid: true,
-      width: 800,
-      height: 1000,
-      isLowResolution: false,
-      isTooDark: false,
-      isTooBright: false,
-      warningMessage: null,
-      isBlurry: false,
-      glareDetected: false,
-      severePerspective: false,
-      packagingGeometry: preset.packaging_geometry || 'flat',
-      qualityIssues: []
-    });
-    setAnalysisError(null);
-    setFlowState('result');
-  };
-
   const handleResetToChoose = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -1053,33 +1023,6 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
               </div>
               <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-900">Scan Barcode →</span>
             </button>
-          </div>
-
-          {/* DEMO PRESETS */}
-          <div className="pt-4 border-t border-slate-200 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Sample Demonstration Packages (PCR 2011)
-              </span>
-              <span className="text-[11px] text-slate-400">SIH 26034 Prototype</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {DEMO_INSPECTIONS.map((demo) => (
-                <button
-                  key={demo.id}
-                  type="button"
-                  onClick={() => handleLoadDemo(demo)}
-                  className="p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-400 hover:shadow-xs text-left transition-all space-y-1"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-slate-500">{demo.inspection_code}</span>
-                    <StatusBadge status={demo.overall_status} size="sm" />
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-900 truncate">{demo.product_name}</h4>
-                  <p className="text-[11px] text-slate-500 truncate">{demo.commodity_name || 'Packaged Commodity'}</p>
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -2273,7 +2216,7 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
               <div className="space-y-1">
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">Audit System</span>
                 <span className="font-semibold text-white">
-                  RuleVision Metrology Compliance Auditor (SIH 26034)
+                  RuleVision Metrology Compliance Auditor
                 </span>
               </div>
             </div>

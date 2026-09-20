@@ -7,14 +7,12 @@ import {
   AlertTriangle,
   ArrowRight,
   ShieldCheck,
-  Clock,
-  Sparkles,
   ChevronRight,
-  FileSpreadsheet
+  FileSpreadsheet,
+  User
 } from 'lucide-react';
 import { InspectionRecord } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
-import { DEMO_INSPECTIONS } from '../data/demoData';
 import { BrandLogo } from '../components/BrandLogo';
 
 interface DashboardPageProps {
@@ -35,7 +33,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const nonCompliantCount = activeInspections.filter(i => i.overall_status === 'NON_COMPLIANT').length;
   const reviewCount = activeInspections.filter(i => i.overall_status === 'NEEDS_REVIEW').length;
 
-  const recentInspections = activeInspections.slice(0, 6);
+  const recentInspections = activeInspections.slice(0, 10);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -50,7 +48,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <BrandLogo size="lg" />
           </div>
           <p className="text-sm md:text-base text-slate-600 dark:text-[#A5A7B0] leading-relaxed font-normal">
-            AI-Powered Legal Metrology Compliance Auditor. Scan packaged commodity labels, verify mandatory statutory declarations under PCR 2011, and generate official compliance reports.
+            AI-Powered Legal Metrology Compliance Auditor. Scan packaged commodity labels, verify mandatory statutory declarations under the Legal Metrology Packaged Commodities Rules, and generate official compliance reports.
           </p>
         </div>
 
@@ -142,73 +140,36 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </div>
 
-      {/* Demonstration Presets Shortcut Card */}
-      <div className="bg-[#101116] rounded-xl p-5 text-white shadow-xs border border-[#292B34]">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#FF2638]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#FF2638]">
-                Demonstration Presets
-              </span>
-            </div>
-            <h3 className="text-base font-bold">Quick Demo Scenarios (No camera/API setup required)</h3>
-            <p className="text-xs text-[#A5A7B0]">
-              Instantly launch verified sample packaged commodities to demonstrate PASS, FAIL, and NEEDS REVIEW workflows.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 shrink-0">
-            {DEMO_INSPECTIONS.map(demo => (
-              <button
-                key={demo.id}
-                onClick={() => onSelectInspection(demo)}
-                className="px-3 py-1.5 rounded-lg bg-[#1B1C23] hover:bg-[#14151B] border border-[#292B34] hover:border-[#FF2638]/50 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>{demo.product_name.split(' ')[0]}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
-                  demo.overall_status === 'COMPLIANT'
-                    ? 'bg-emerald-500 text-white'
-                    : demo.overall_status === 'NON_COMPLIANT'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-amber-400 text-slate-950'
-                }`}>
-                  {demo.overall_status === 'COMPLIANT' ? 'PASS' : demo.overall_status === 'NON_COMPLIANT' ? 'FAIL' : 'REVIEW'}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Recent Inspections Table */}
       <div className="bg-white dark:bg-[#14151B] rounded-xl border border-slate-200 dark:border-[#292B34] shadow-2xs overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 dark:border-[#292B34] flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">Recent Inspections</h2>
-            <p className="text-xs text-slate-500 dark:text-[#A5A7B0]">Chronological register of active examined packaged commodities</p>
+            <p className="text-xs text-slate-500 dark:text-[#A5A7B0]">Real-time register of examined packaged commodities</p>
           </div>
-          <button
-            onClick={() => onNavigate('history')}
-            className="text-xs font-semibold text-slate-900 dark:text-[#FF2638] hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            View All ({totalCount})
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          {totalCount > 0 && (
+            <button
+              onClick={() => onNavigate('history')}
+              className="text-xs font-semibold text-slate-900 dark:text-[#FF2638] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View All ({totalCount})
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {recentInspections.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
-              <ScanEye className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#1B1C23] text-slate-400 dark:text-[#A5A7B0] mx-auto flex items-center justify-center border border-transparent dark:border-[#292B34]">
+              <ScanEye className="w-6 h-6 text-[#FF2638]" />
             </div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No inspections yet.</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              Upload a packaged commodity photograph to start your first Legal Metrology compliance audit.
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white">No inspections yet.</h3>
+            <p className="text-xs text-slate-500 dark:text-[#A5A7B0] max-w-sm mx-auto">
+              Upload or capture a packaged commodity photograph to start your first Legal Metrology compliance audit.
             </p>
             <button
               onClick={() => onNavigate('inspect')}
-              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-xs font-semibold shadow-xs"
+              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors"
             >
               Inspect Product
             </button>
@@ -216,21 +177,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200/80 dark:border-slate-800 uppercase text-[11px] tracking-wider">
+              <thead className="bg-slate-50/80 dark:bg-[#101116] text-slate-500 dark:text-[#A5A7B0] font-semibold border-b border-slate-200/80 dark:border-[#292B34] uppercase text-[11px] tracking-wider">
                 <tr>
                   <th className="px-6 py-3.5">Inspection ID</th>
                   <th className="px-6 py-3.5">Product Name</th>
-                  <th className="px-6 py-3.5">Date</th>
+                  <th className="px-6 py-3.5">Inspected By</th>
+                  <th className="px-6 py-3.5">Date & Time</th>
                   <th className="px-6 py-3.5">Status</th>
                   <th className="px-6 py-3.5">Issues</th>
                   <th className="px-6 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-normal">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#292B34] font-normal">
                 {recentInspections.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50/70 dark:hover:bg-[#1B1C23]/60 transition-colors cursor-pointer"
                     onClick={() => onSelectInspection(item)}
                   >
                     <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
@@ -239,12 +201,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white max-w-[220px] truncate">
                       {item.product_name}
                     </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {new Date(item.created_at).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
+                    <td className="px-6 py-4 text-slate-600 dark:text-[#A5A7B0]">
+                      <div className="flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-[#FF2638]" />
+                        <span className="font-medium text-slate-900 dark:text-white truncate max-w-[140px]">
+                          {item.inspector_name || item.inspector_email || 'Authorized User'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-[#A5A7B0] whitespace-nowrap">
+                      <div>
+                        {new Date(item.created_at).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </div>
+                      <div className="text-[10px] text-slate-400 dark:text-[#71737E]">
+                        {new Date(item.created_at).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={item.overall_status} size="sm" />
@@ -268,7 +246,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                           e.stopPropagation();
                           onSelectInspection(item);
                         }}
-                        className="text-xs font-semibold text-slate-900 dark:text-white hover:underline inline-flex items-center gap-1"
+                        className="text-xs font-semibold text-slate-900 dark:text-[#FF2638] hover:underline inline-flex items-center gap-1 cursor-pointer"
                       >
                         View Details
                         <ArrowRight className="w-3 h-3" />

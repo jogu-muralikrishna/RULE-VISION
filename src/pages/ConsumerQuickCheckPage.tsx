@@ -21,14 +21,20 @@ import {
   Tag,
   Scale,
   Globe,
-  FileCheck
+  FileCheck,
+  User,
+  History,
+  Eye,
+  ArrowRight
 } from 'lucide-react';
 import { BrandLogo } from '../components/BrandLogo';
-import { InspectionRecord, ExtractedPackageData } from '../types';
+import { InspectionRecord, ExtractedPackageData, UserProfile } from '../types';
 import { analyzeProductImage } from '../services/inspectionService';
-import { DEMO_INSPECTIONS } from '../data/demoData';
+import { dbService } from '../services/db';
+import { StatusBadge } from '../components/StatusBadge';
 
 interface ConsumerQuickCheckPageProps {
+  currentUser?: UserProfile | null;
   onSwitchMode?: () => void;
   onLogout?: () => void;
   isDarkMode: boolean;
@@ -36,6 +42,7 @@ interface ConsumerQuickCheckPageProps {
 }
 
 export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
+  currentUser,
   onSwitchMode,
   onLogout,
   isDarkMode,
@@ -48,10 +55,26 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [resultRecord, setResultRecord] = useState<InspectionRecord | null>(null);
+  const [userInspections, setUserInspections] = useState<InspectionRecord[]>([]);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Load user saved inspections on mount
+  useEffect(() => {
+    dbService.getAllInspections(false).then(records => {
+      if (currentUser?.id || currentUser?.email) {
+        const userRecords = records.filter(r => 
+          (currentUser.id && r.user_id === currentUser.id) || 
+          (currentUser.email && r.inspector_email === currentUser.email)
+        );
+        setUserInspections(userRecords);
+      } else {
+        setUserInspections(records);
+      }
+    }).catch(err => console.warn('Failed to load user inspections:', err));
+  }, [currentUser]);
 
   // Stop camera on unmount
   useEffect(() => {
@@ -106,7 +129,6 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
     setImageFileName(newName);
     setResultRecord(null);
     setAnalysisError(null);
-    // Immediately initiate scanning without passing filename as product name
     handleAnalyze(dataUrl);
   };
 
@@ -127,7 +149,6 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
       setResultRecord(null);
       setAnalysisError(null);
       stopCamera();
-      // Immediately initiate scanning without passing filename as commodity name
       handleAnalyze(dataUrl);
     };
     reader.readAsDataURL(file);
@@ -141,29 +162,29 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
     setAnalysisError(null);
 
     try {
-      // Execute standard shared analysis pipeline
-      // Do not send image filename or placeholder as statutory commodity name
       const record = await analyzeProductImage({
         image: targetImage,
         mimeType: 'image/jpeg',
         productName: undefined
       });
 
-      setResultRecord(record);
+      // Save real-time inspection associated with the logged-in user
+      const userRecord: InspectionRecord = {
+        ...record,
+        user_id: currentUser?.id || null,
+        inspector_name: currentUser?.email ? `Citizen (${currentUser.email.split('@')[0]})` : 'Citizen User',
+        inspector_email: currentUser?.email || 'citizen@rulevision.gov.in'
+      };
+
+      await dbService.saveInspection(userRecord);
+      setResultRecord(userRecord);
+      setUserInspections(prev => [userRecord, ...prev.filter(r => r.id !== userRecord.id)]);
     } catch (err: any) {
       console.error('Consumer analysis error:', err);
-      setAnalysisError(err.message || 'Could not inspect the image. Please try another photo or ensure the package label is clearly visible.');
+      setAnalysisError(err.message || 'Could not inspect the image. Please ensure the package label declarations are clearly visible.');
     } finally {
       setIsAnalyzing(false);
     }
-  };
-
-  const handleLoadSample = (sample: InspectionRecord) => {
-    stopCamera();
-    setImageSrc(sample.image_url);
-    setImageFileName(sample.product_name);
-    setResultRecord(sample);
-    setAnalysisError(null);
   };
 
   const handleReset = () => {
@@ -171,6 +192,15 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
     setImageSrc(null);
     setResultRecord(null);
     setAnalysisError(null);
+  };
+
+  const handleSelectPastInspection = (item: InspectionRecord) => {
+    stopCamera();
+    setImageSrc(item.image_url);
+    setImageFileName(item.product_name);
+    setResultRecord(item);
+    setAnalysisError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Check overall classification for consumer wording
@@ -183,9 +213,17 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
       {/* Top Header */}
       <header className="bg-white dark:bg-[#101116] border-b border-slate-200 dark:border-[#292B34] px-4 py-3 sticky top-0 z-30 shadow-2xs">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <BrandLogo size="sm" badge="Consumer" showSubtitle={true} subtitle="Quick Compliance Check" />
+          <BrandLogo size="sm" badge="Citizen" showSubtitle={true} subtitle="Legal Metrology Quick Check" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            {currentUser && (
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-[#1B1C23] border border-slate-200 dark:border-[#292B34] text-xs">
+                <User className="w-3.5 h-3.5 text-[#FF2638]" />
+                <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[150px]">{currentUser.email}</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded uppercase font-bold bg-[#FF2638]/20 text-[#FF2638] border border-[#FF2638]/30">Citizen</span>
+              </div>
+            )}
+
             <button
               id="consumer-theme-toggle"
               onClick={onToggleTheme}
@@ -227,13 +265,13 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
             <span className="text-xs uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1B1C23] text-slate-700 dark:text-[#FF2638] border border-slate-200 dark:border-[#292B34]">
               RULEVISION
             </span>
-            <span className="text-xs text-slate-500 dark:text-[#A5A7B0] font-semibold">• Consumer Dashboard</span>
+            <span className="text-xs text-slate-500 dark:text-[#A5A7B0] font-semibold">• Citizen Inspection Workspace</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950 dark:text-white">
             Quick Product Check
           </h1>
           <p className="text-sm text-slate-600 dark:text-[#A5A7B0]">
-            Scan or upload a packaged product to verify statutory declarations under PCR 2011.
+            Scan or upload a packaged product to verify statutory declarations under Legal Metrology rules.
           </p>
         </div>
 
@@ -298,7 +336,7 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
                   </div>
                   <div className="text-center">
                     <span className="font-bold text-sm block text-slate-900 dark:text-white">Upload Image</span>
-                    <span className="text-xs text-slate-500 dark:text-[#A5A7B0] mt-0.5 block">Select package label photo from device</span>
+                    <span className="text-xs text-slate-500 dark:text-[#A5A7B0] mt-0.5 block">Select package photo from device</span>
                   </div>
                 </button>
 
@@ -312,31 +350,30 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
               </div>
             )}
 
-            {/* Image Preview & Analyze CTA */}
+            {/* Image Preview & Analysis trigger */}
             {imageSrc && !isCameraActive && (
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-[#101116] border border-slate-200 dark:border-[#292B34]">
-                  <div className="w-32 h-32 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-slate-200 dark:bg-[#1B1C23] shrink-0 border border-slate-300 dark:border-[#292B34] flex items-center justify-center">
-                    <img src={imageSrc} alt="Product Preview" className="w-full h-full object-contain" />
+                <div className="relative rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-200 dark:border-[#292B34]">
+                  <img src={imageSrc} alt="Product Preview" className="w-full h-full object-contain" />
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <div className="text-xs text-slate-500 dark:text-[#A5A7B0] truncate max-w-xs">
+                    File: <span className="font-medium text-slate-800 dark:text-slate-200">{imageFileName}</span>
                   </div>
-                  <div className="flex-1 space-y-1 text-center sm:text-left">
-                    <p className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-sm">
-                      {imageFileName}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-[#A5A7B0]">
-                      Photo ready for AI-assisted declaration check.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={handleReset}
-                      className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-[#A5A7B0] hover:bg-slate-200 dark:hover:bg-[#1B1C23] transition-colors cursor-pointer"
+                      disabled={isAnalyzing}
+                      className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#292B34] text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-[#1B1C23] transition-colors cursor-pointer"
                     >
                       Change Photo
                     </button>
+
                     <button
                       id="consumer-btn-analyze"
-                      onClick={handleAnalyze}
+                      onClick={() => handleAnalyze()}
                       disabled={isAnalyzing}
                       className="px-5 py-2.5 rounded-xl bg-[#FF2638] hover:bg-[#B51226] disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2 cursor-pointer"
                     >
@@ -364,26 +401,6 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
                 <div className="space-y-1">
                   <p className="font-bold">Check Unsuccessful</p>
                   <p>{analysisError}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Quick Test Samples (Optional for testing) */}
-            {!imageSrc && !isCameraActive && (
-              <div className="pt-2 border-t border-slate-100 dark:border-[#292B34] text-center">
-                <span className="text-[11px] font-semibold text-slate-400 dark:text-[#A5A7B0] block mb-2">
-                  OR TRY A DEMONSTRATION PRODUCT
-                </span>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {DEMO_INSPECTIONS.map(demo => (
-                    <button
-                      key={demo.id}
-                      onClick={() => handleLoadSample(demo)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#1B1C23] hover:bg-slate-200 dark:hover:bg-[#101116] border border-transparent dark:border-[#292B34] hover:border-[#FF2638]/40 text-slate-700 dark:text-[#F5F5F7] transition-all font-medium cursor-pointer"
-                    >
-                      {demo.product_name}
-                    </button>
-                  ))}
                 </div>
               </div>
             )}
@@ -420,270 +437,223 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
                   )}
                 </div>
 
-                <div className="space-y-1.5 flex-1">
-                  <h2 className="text-lg sm:text-xl font-extrabold tracking-tight">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase font-mono font-bold tracking-wider opacity-75">
+                      {resultRecord.inspection_code}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-900/10 dark:bg-white/10 font-semibold">
+                      Saved to Dashboard
+                    </span>
+                  </div>
+
+                  <h2 className="text-xl font-bold tracking-tight">
                     {hasIssues
-                      ? 'Potential Issue Detected'
+                      ? 'Statutory Non-Compliance Detected'
                       : needsReview
-                      ? 'Information Requires Verification'
-                      : 'Required visible declarations were detected.'}
+                      ? 'Notice: Additional Verification Recommended'
+                      : 'All Mandatory Declarations Verified'}
                   </h2>
-                  <p className="text-xs sm:text-sm leading-relaxed opacity-90">
+
+                  <p className="text-xs leading-relaxed opacity-90">
                     {hasIssues
-                      ? 'Certain mandatory label declarations under Legal Metrology rules appear to be missing or non-compliant on this package.'
+                      ? 'One or more mandatory declarations required under Legal Metrology rules appear missing or non-compliant on this packaging.'
                       : needsReview
-                      ? 'Some declarations could not be confidently verified due to lighting, packaging curve, or print quality.'
-                      : 'All 8 core statutory declarations (MRP, Net Quantity, Dates, Consumer Care, and Manufacturer) were identified on this package.'}
+                      ? 'Some declarations could not be verified with complete confidence (e.g. obscured, faint font, or curved surface glare). Physical verification advised.'
+                      : 'All examined statutory declarations (Commodity Name, Net Qty, MRP with taxes, Dates, Consumer Care, Manufacturer & Origin) are present and conform to rules.'}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* A. Summary Counts (Single Source of Truth) */}
-            <div className={`grid grid-cols-2 ${(resultRecord.not_applicable_count || 0) > 0 ? 'sm:grid-cols-5' : 'sm:grid-cols-4'} gap-3`}>
-              <div className="p-3 bg-white dark:bg-[#14151B] rounded-xl border border-slate-200 dark:border-[#292B34] text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#A5A7B0] block">Total Checks</span>
-                <span className="text-xl font-black text-slate-900 dark:text-white">
-                  {resultRecord.compliance_results?.length || 0}
-                </span>
-              </div>
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">Passed</span>
-                <span className="text-xl font-black text-emerald-700 dark:text-emerald-300">
-                  {resultRecord.passed_count}
-                </span>
-              </div>
-              <div className="p-3 bg-red-50 dark:bg-red-950/40 rounded-xl border border-red-200 dark:border-red-800 text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-red-700 dark:text-red-300 block">Failed</span>
-                <span className="text-xl font-black text-red-700 dark:text-red-300">
-                  {resultRecord.failed_count}
-                </span>
-              </div>
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 block">Needs Review</span>
-                <span className="text-xl font-black text-amber-700 dark:text-amber-300">
-                  {resultRecord.review_count}
-                </span>
-              </div>
-              {(resultRecord.not_applicable_count || 0) > 0 && (
-                <div className="p-3 bg-slate-50 dark:bg-[#1B1C23] rounded-xl border border-slate-200 dark:border-[#292B34] text-center">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#A5A7B0] block">Not Applicable</span>
-                  <span className="text-xl font-black text-slate-700 dark:text-slate-300">
-                    {resultRecord.not_applicable_count}
+            {/* Commodity Identification Summary */}
+            <div className="bg-white dark:bg-[#14151B] rounded-2xl border border-slate-200 dark:border-[#292B34] p-5 shadow-2xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#292B34] pb-3">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-[#FF2638]" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                    Identified Product
                   </span>
                 </div>
-              )}
-            </div>
+                <StatusBadge status={resultRecord.overall_status} size="sm" />
+              </div>
 
-            {/* Mandatory Statutory Notice */}
-            <div className="p-4 rounded-xl bg-slate-100 dark:bg-[#14151B] border border-slate-200 dark:border-[#292B34] text-xs text-slate-600 dark:text-[#A5A7B0] flex items-start gap-2.5">
-              <Info className="w-4 h-4 text-[#FF2638] shrink-0 mt-0.5" />
-              <p className="leading-relaxed">
-                <strong className="text-slate-800 dark:text-white font-semibold">Statutory Notice:</strong> RuleVision provides AI-assisted screening under Legal Metrology Rules, 2011. Final legal determination must be made by an authorized Legal Metrology officer.
-              </p>
-            </div>
-
-            {/* B. Product Information Breakdown */}
-            <div className="bg-white dark:bg-[#14151B] rounded-2xl border border-slate-200 dark:border-[#292B34] p-5 sm:p-6 shadow-2xs space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-[#A5A7B0] flex items-center gap-2">
-                <FileCheck className="w-4 h-4 text-[#FF2638]" />
-                Product Information
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                {/* Product / Commodity */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Generic Commodity Name</span>
-                  <span className="text-slate-900 dark:text-white font-bold text-sm">
-                    {resultRecord.commodity_name || 'Not Detected'}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-slate-400 dark:text-[#71737E] block text-[11px]">Commodity / Product Name</span>
+                  <span className="font-bold text-sm text-slate-900 dark:text-white block mt-0.5">
+                    {resultRecord.commodity_name || resultRecord.product_name}
                   </span>
                 </div>
 
-                {/* MRP */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">MRP (Maximum Retail Price)</span>
-                  <span className="text-slate-900 dark:text-white font-bold text-sm">
+                <div>
+                  <span className="text-slate-400 dark:text-[#71737E] block text-[11px]">Inspected By</span>
+                  <span className="font-semibold text-slate-900 dark:text-white block mt-0.5">
+                    {resultRecord.inspector_name || resultRecord.inspector_email || 'Citizen User'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 dark:text-[#71737E] block text-[11px]">Maximum Retail Price (MRP)</span>
+                  <span className="font-bold text-slate-900 dark:text-white block mt-0.5">
                     {resultRecord.mrp || 'Not Detected'}
                   </span>
                 </div>
 
-                {/* Net Quantity */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Net Quantity</span>
-                  <span className="text-slate-900 dark:text-white font-bold text-sm">
+                <div>
+                  <span className="text-slate-400 dark:text-[#71737E] block text-[11px]">Net Quantity</span>
+                  <span className="font-bold text-slate-900 dark:text-white block mt-0.5">
                     {resultRecord.net_quantity || 'Not Detected'}
                   </span>
                 </div>
 
-                {/* Dates */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Date (Mfg / Packing)</span>
-                  <span className="text-slate-900 dark:text-white font-bold text-sm">
-                    {resultRecord.manufacturing_or_packing_date || 'Not Detected'}
-                  </span>
-                </div>
-
-                {/* Expiry / Best Before */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Expiry / Best Before</span>
-                  <span className="text-slate-900 dark:text-white font-bold text-sm">
-                    {resultRecord.expiry_or_best_before || 'Not Detected'}
-                  </span>
-                </div>
-
-                {/* Country of Origin */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Country of Origin</span>
-                  <span className="text-slate-900 dark:text-white font-bold text-sm">
-                    {resultRecord.country_of_origin || 'Not Detected'}
-                  </span>
-                </div>
-
-                {/* Consumer Care */}
-                <div className="sm:col-span-2 p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Consumer Care Contact</span>
-                  <span className="text-slate-900 dark:text-white font-medium">
-                    {resultRecord.consumer_care_contact || 'Not Detected'}
-                  </span>
-                </div>
-
-                {/* Manufacturer / Packer Name */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Manufacturer / Packer Name</span>
-                  <span className="text-slate-900 dark:text-white font-medium">
+                <div>
+                  <span className="text-slate-400 dark:text-[#71737E] block text-[11px]">Manufacturer Name</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200 block mt-0.5">
                     {resultRecord.manufacturer_name || 'Not Detected'}
                   </span>
                 </div>
 
-                {/* Manufacturer / Packer Full Address */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                  <span className="text-slate-400 dark:text-[#71737E] font-semibold block">Manufacturer / Packer Full Address</span>
-                  <span className="text-slate-900 dark:text-white font-medium">
-                    {resultRecord.manufacturer_address || 'Not Detected'}
+                <div>
+                  <span className="text-slate-400 dark:text-[#71737E] block text-[11px]">Consumer Care</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200 block mt-0.5">
+                    {resultRecord.consumer_care_contact || 'Not Detected'}
                   </span>
                 </div>
-
-                {/* FSSAI License Number (if applicable or present) */}
-                {resultRecord.fssai_license && (
-                  <div className="sm:col-span-2 p-3.5 rounded-xl bg-slate-50 dark:bg-[#1B1C23] border border-slate-200/80 dark:border-[#292B34] space-y-1">
-                    <span className="text-slate-400 dark:text-[#71737E] font-semibold block">FSSAI License Number</span>
-                    <span className="text-slate-900 dark:text-white font-medium">
-                      {resultRecord.fssai_license}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* C. Declarations Requiring Verification */}
-            {resultRecord.compliance_results?.some(c => c.status === 'NEEDS_REVIEW') && (
-              <div className="bg-amber-50/95 dark:bg-[#14151B] rounded-2xl border-2 border-amber-400 dark:border-amber-800/80 p-5 shadow-2xs space-y-4">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                    Declarations Requiring Verification ({resultRecord.compliance_results.filter(c => c.status === 'NEEDS_REVIEW').length})
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  {resultRecord.compliance_results.filter(c => c.status === 'NEEDS_REVIEW').map((rev, i) => (
-                    <div key={`c-rev-${rev.fieldKey || i}`} className="p-3.5 bg-white dark:bg-[#1B1C23] rounded-xl border border-amber-200 dark:border-amber-900/60 space-y-1.5 shadow-2xs">
-                      <div className="font-bold text-amber-900 dark:text-amber-200 flex items-center justify-between">
-                        <span>{rev.fieldLabel}</span>
-                        <span className="text-[10px] font-mono uppercase bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-bold">Needs Check</span>
+            {/* Checklist of Rule Declarations */}
+            <div className="bg-white dark:bg-[#14151B] rounded-2xl border border-slate-200 dark:border-[#292B34] p-5 shadow-2xs space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-[#FF2638]" />
+                Declarations Verification Breakdown
+              </h3>
+
+              <div className="space-y-2.5 text-xs">
+                {resultRecord.compliance_results?.map((rule, idx) => (
+                  <div
+                    key={`rule-${idx}`}
+                    className={`p-3 rounded-xl border flex items-start justify-between gap-3 ${
+                      rule.status === 'PASS'
+                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60'
+                        : rule.status === 'FAIL'
+                        ? 'bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-900/60'
+                        : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/60'
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>{rule.fieldLabel}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">({rule.statutoryReference.split('-')[1]?.trim() || rule.statutoryReference})</span>
                       </div>
-                      <p className="text-amber-900 dark:text-amber-300 leading-normal">{rev.reason}</p>
-                      {rev.detectedValue && (
-                        <p className="text-slate-500 dark:text-[#A5A7B0] text-[11px] font-mono truncate">
-                          Detected text: "{rev.detectedValue}"
+                      <p className="text-[11px] text-slate-600 dark:text-[#A5A7B0] leading-normal">{rule.reason}</p>
+                      {rule.detectedValue && (
+                        <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-1">
+                          Detected: <span className="font-semibold text-slate-900 dark:text-white">{rule.detectedValue}</span>
                         </p>
                       )}
                     </div>
-                  ))}
-                </div>
+
+                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                      rule.status === 'PASS'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+                        : rule.status === 'FAIL'
+                        ? 'bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300'
+                        : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                    }`}>
+                      {rule.status}
+                    </span>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
 
-            {/* D. Verified Passed Checks */}
-            {resultRecord.compliance_results?.some(c => c.status === 'PASS') && (
-              <div className="bg-white dark:bg-[#14151B] rounded-2xl border border-slate-200 dark:border-[#292B34] p-5 sm:p-6 shadow-2xs space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Verified Passed Checks ({resultRecord.compliance_results.filter(c => c.status === 'PASS').length})
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  {resultRecord.compliance_results.filter(c => c.status === 'PASS').map((pass, index) => (
-                    <div
-                      key={`pass-${pass.fieldKey || index}`}
-                      className="p-3.5 bg-emerald-50/60 dark:bg-[#1B1C23] rounded-xl border border-emerald-200 dark:border-emerald-900/40 space-y-1.5 shadow-2xs"
-                    >
-                      <div className="flex items-center justify-between font-bold text-emerald-900 dark:text-emerald-300">
-                        <span>{pass.fieldLabel}</span>
-                        <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800">
-                          Pass
-                        </span>
-                      </div>
-                      <p className="text-emerald-800 dark:text-emerald-300/90 leading-normal">{pass.reason}</p>
-                      {pass.detectedValue && (
-                        <p className="text-slate-500 dark:text-[#A5A7B0] text-[11px] font-mono truncate">
-                          Declared: {pass.detectedValue}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* E. Confirmed Failures, if any */}
-            {resultRecord.compliance_results?.some(c => c.status === 'FAIL') && (
-              <div className="bg-red-50/95 dark:bg-[#14151B] rounded-2xl border-2 border-red-400 dark:border-red-900/80 p-5 shadow-2xs space-y-4">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-red-700 dark:text-red-400">
-                    Confirmed Statutory Failures ({resultRecord.compliance_results.filter(c => c.status === 'FAIL').length})
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  {resultRecord.compliance_results.filter(c => c.status === 'FAIL').map((viol, i) => (
-                    <div key={`c-viol-${viol.fieldKey || i}`} className="p-3.5 bg-white dark:bg-[#1B1C23] rounded-xl border border-red-200 dark:border-red-900/60 space-y-1.5 shadow-2xs">
-                      <div className="font-bold text-red-900 dark:text-red-300 flex items-center justify-between">
-                        <span>{viol.fieldLabel}</span>
-                        <span className="text-[10px] font-mono uppercase bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded font-bold border border-red-300 dark:border-red-800">Violation</span>
-                      </div>
-                      <p className="text-red-800 dark:text-red-300/90 leading-normal">{viol.reason}</p>
-                      {viol.detectedValue && (
-                        <p className="text-slate-500 dark:text-[#A5A7B0] text-[11px] italic">
-                          Evidence on label: "{viol.detectedValue}"
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Bottom Actions */}
-            <div className="flex justify-center pt-2">
+            {/* Actions */}
+            <div className="flex justify-center gap-3 pt-2">
               <button
-                id="consumer-btn-check-another"
                 onClick={handleReset}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-sm font-bold shadow-lg shadow-[#FF2638]/25 transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-xs font-bold shadow-md cursor-pointer transition-all"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 <span>Check Another Product</span>
               </button>
             </div>
           </div>
         )}
+
+        {/* ================================================= */}
+        {/* MY RECENT INSPECTIONS (SAVED TO DASHBOARD)        */}
+        {/* ================================================= */}
+        <div className="bg-white dark:bg-[#14151B] rounded-2xl border border-slate-200 dark:border-[#292B34] p-5 sm:p-6 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#292B34] pb-3">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-[#FF2638]" />
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                My Saved Inspections
+              </h2>
+            </div>
+            <span className="text-xs text-slate-400 dark:text-[#71737E]">
+              {userInspections.length} recorded
+            </span>
+          </div>
+
+          {userInspections.length === 0 ? (
+            <div className="py-8 text-center space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#1B1C23] text-slate-400 mx-auto flex items-center justify-center">
+                <Search className="w-5 h-5 text-[#FF2638]" />
+              </div>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No inspections yet</p>
+              <p className="text-[11px] text-slate-500 dark:text-[#A5A7B0] max-w-xs mx-auto">
+                Scan or upload a packaged product photo above to run an inspection and save it to your dashboard.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {userInspections.slice(0, 5).map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleSelectPastInspection(item)}
+                  className="p-3.5 rounded-xl border border-slate-200 dark:border-[#292B34] bg-slate-50/50 dark:bg-[#101116] hover:border-[#FF2638]/60 hover:bg-slate-100/50 dark:hover:bg-[#1B1C23] transition-all flex items-center justify-between gap-3 cursor-pointer group"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[11px] font-bold text-slate-900 dark:text-white">
+                        {item.inspection_code}
+                      </span>
+                      <StatusBadge status={item.overall_status} size="sm" />
+                    </div>
+                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {item.product_name}
+                    </div>
+                    <div className="text-[10px] text-slate-400 dark:text-[#71737E] flex items-center gap-2">
+                      <span>{new Date(item.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                      <span>•</span>
+                      <span>Inspected by: {item.inspector_name || item.inspector_email || 'You'}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="p-2 rounded-lg bg-white dark:bg-[#1B1C23] border border-slate-200 dark:border-[#292B34] text-slate-700 dark:text-slate-300 group-hover:border-[#FF2638] group-hover:text-[#FF2638] transition-colors shrink-0"
+                    title="View Inspection Details"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </main>
 
-      {/* Clean Consumer Footer */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 py-4 px-4 text-center text-xs text-slate-400 dark:text-slate-500">
+      {/* Clean Footer */}
+      <footer className="mt-auto border-t border-slate-200 dark:border-[#292B34] py-4 px-4 text-center text-xs text-slate-400 dark:text-slate-500">
         <p className="font-bold text-slate-700 dark:text-slate-300 tracking-tight">
-          Rule<span className="text-slate-500 dark:text-slate-400">Vision</span>
+          Rule<span className="text-[#FF2638]">Vision</span>
         </p>
-        <p className="text-[11px] mt-0.5">Team RuleVision • AI-Powered Legal Metrology Compliance Auditor</p>
+        <p className="text-[11px] mt-0.5">RuleVision • AI-Powered Legal Metrology Compliance Auditor</p>
       </footer>
     </div>
   );
