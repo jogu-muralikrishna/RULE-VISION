@@ -23,7 +23,7 @@ import {
 import { BrandLogo } from './BrandLogo';
 import { UserProfile } from '../types';
 
-export type PageId = 'dashboard' | 'inspect' | 'batch' | 'history' | 'recycle-bin' | 'reports' | 'rules';
+export type PageId = 'dashboard' | 'inspect' | 'batch' | 'history' | 'recycle-bin' | 'reports' | 'rules' | 'admin-requests';
 
 interface AppShellProps {
   currentPage: PageId;
@@ -32,6 +32,7 @@ interface AppShellProps {
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
   recycleBinCount?: number;
+  pendingRequestsCount?: number;
   currentUser?: UserProfile | null;
   onLogout?: () => void;
   children: React.ReactNode;
@@ -44,6 +45,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   isDarkMode = false,
   onToggleTheme,
   recycleBinCount = 0,
+  pendingRequestsCount = 0,
   currentUser,
   onLogout,
   children
@@ -77,6 +79,9 @@ export const AppShell: React.FC<AppShellProps> = ({
     { id: 'recycle-bin', label: 'Recycle Bin', icon: Trash2, badge: recycleBinCount },
     { id: 'reports', label: 'Reports & Notices', icon: FileText },
     { id: 'rules', label: 'Compliance Rules', icon: Scale },
+    ...(currentUser?.role === 'admin'
+      ? [{ id: 'admin-requests' as PageId, label: 'Inspector Requests', icon: UserCheck, badge: pendingRequestsCount }]
+      : [])
   ];
 
   return (
@@ -97,7 +102,12 @@ export const AppShell: React.FC<AppShellProps> = ({
         <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-[#101116] border-r border-slate-200 dark:border-[#292B34] p-4 shrink-0 shadow-xs">
           {/* Brand Header */}
           <div className="px-2 py-3 mb-4 border-b border-slate-100 dark:border-[#292B34]">
-            <BrandLogo size="md" badge="Inspector" showSubtitle={true} subtitle="Legal Metrology Screening" />
+            <BrandLogo
+              size="md"
+              badge={currentUser?.role === 'admin' ? 'Admin' : currentUser?.role === 'inspector' ? 'Inspector' : 'Citizen'}
+              showSubtitle={true}
+              subtitle="Legal Metrology Screening"
+            />
           </div>
 
           {/* Mode switch & theme toggles */}
@@ -232,7 +242,10 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         {/* Mobile Top Header */}
         <header className="md:hidden bg-white dark:bg-[#101116] border-b border-slate-200 dark:border-[#292B34] px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-          <BrandLogo size="sm" badge="Inspector" />
+          <BrandLogo
+            size="sm"
+            badge={currentUser?.role === 'admin' ? 'Admin' : currentUser?.role === 'inspector' ? 'Inspector' : 'Citizen'}
+          />
 
           <div className="flex items-center gap-2">
             <button

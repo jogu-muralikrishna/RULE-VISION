@@ -134,13 +134,40 @@ export interface InspectionRecord {
   deleted_at?: string | null;
 }
 
-export type UserRole = 'inspector' | 'consumer';
+export type UserRole = 'admin' | 'inspector' | 'consumer';
+export type InspectorStatus = 'not_requested' | 'pending' | 'approved' | 'rejected';
 
 export interface UserProfile {
   id: string;
   email: string;
+  full_name?: string;
   role: UserRole;
+  inspector_status?: InspectorStatus;
+  inspector_id?: string | null;
+  department?: string | null;
+  state?: string | null;
+  district?: string | null;
+  supporting_document_path?: string | null;
+  verified_by?: string | null;
+  verified_at?: string | null;
   created_at: string;
+  updated_at?: string | null;
+}
+
+export interface InspectorAccessRequest {
+  id: string;
+  user_id: string;
+  full_name: string;
+  email: string;
+  inspector_id: string;
+  department: string;
+  state: string;
+  district: string;
+  supporting_document_path?: string | null;
+  status: InspectorStatus;
+  created_at: string;
+  verified_by?: string | null;
+  verified_at?: string | null;
 }
 
 export interface ImageQualityReport {

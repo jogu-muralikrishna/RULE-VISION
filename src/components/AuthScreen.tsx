@@ -16,7 +16,12 @@ import {
   FileCheck2,
   Sparkles,
   User,
-  Shield
+  Shield,
+  Building2,
+  MapPin,
+  UploadCloud,
+  FileText,
+  Check
 } from 'lucide-react';
 import { authService } from '../services/authService';
 import { UserProfile, UserRole } from '../types';
@@ -30,6 +35,17 @@ interface AuthScreenProps {
 
 type AuthMode = 'login' | 'signup' | 'forgot_password';
 
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+  'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+  'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+  'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi (NCT)', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+];
+
 export const AuthScreen: React.FC<AuthScreenProps> = ({
   onLoginSuccess,
   isDarkMode,
@@ -39,7 +55,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('consumer');
+  const [fullName, setFullName] = useState('');
+  const [accountType, setAccountType] = useState<'consumer' | 'inspector'>('consumer');
+  const [inspectorId, setInspectorId] = useState('');
+  const [department, setDepartment] = useState('Department of Legal Metrology');
+  const [state, setState] = useState('Karnataka');
+  const [district, setDistrict] = useState('');
+  const [supportingDocFile, setSupportingDocFile] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,20 +93,71 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    if (!fullName.trim()) {
+      setErrorMessage('Please enter your full name.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match. Please re-enter.');
       return;
     }
 
+    if (accountType === 'inspector') {
+      if (!inspectorId.trim()) {
+        setErrorMessage('Inspector ID / Badge Number is required for enforcement accounts.');
+        return;
+      }
+      if (!department.trim()) {
+        setErrorMessage('Department / Authority is required.');
+        return;
+      }
+      if (!state.trim()) {
+        setErrorMessage('Jurisdiction State is required.');
+        return;
+      }
+      if (!district.trim()) {
+        setErrorMessage('District / Zone is required.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
-      const res = await authService.signUp(email, password, role);
+      let supportingDocUrl: string | null = null;
+      if (accountType === 'inspector' && supportingDocFile) {
+        supportingDocUrl = await authService.uploadSupportingDocument(supportingDocFile);
+      }
+
+      const res = await authService.signUp({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        password,
+        accountType,
+        inspectorDetails: accountType === 'inspector' ? {
+          inspectorId: inspectorId.trim(),
+          department: department.trim(),
+          state: state.trim(),
+          district: district.trim(),
+          supportingDocument: supportingDocUrl
+        } : undefined
+      });
+
       if (res.success && res.user) {
-        setSuccessMessage('Account created successfully! Logging you in...');
+        if (res.user.inspector_status === 'pending') {
+          setSuccessMessage('Inspector access request submitted successfully! Your account is pending administrator approval.');
+        } else {
+          setSuccessMessage('Account created successfully! Logging you in...');
+        }
         setTimeout(() => {
           onLoginSuccess(res.user!);
-        }, 500);
+        }, 600);
       } else {
         setErrorMessage(res.error || 'Failed to create account.');
       }
@@ -384,46 +457,97 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               {/* FORM: SIGN UP */}
               {authMode === 'signup' && (
                 <form onSubmit={handleSignUp} className="space-y-4">
-                  {/* Role Selection */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#F5F5F7] block">
+                  {/* Step 1: Select Account Type Cards */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-[#F5F5F7] block uppercase tracking-wider">
                       Select Account Type
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setRole('consumer')}
-                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col ${
-                          role === 'consumer'
-                            ? 'border-[#FF2638] bg-[#FF2638]/10 text-white'
-                            : 'border-[#292B34] bg-[#101116] text-[#A5A7B0] hover:border-slate-600'
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Consumer Card */}
+                      <div
+                        onClick={() => setAccountType('consumer')}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden ${
+                          accountType === 'consumer'
+                            ? 'border-[#FF2638] bg-[#FF2638]/10 ring-1 ring-[#FF2638]/50 shadow-md shadow-[#FF2638]/10'
+                            : 'border-[#292B34] bg-[#101116] hover:border-slate-600 hover:bg-[#15161D]'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <User className="w-3.5 h-3.5 text-[#FF2638]" />
-                          <span className="text-xs font-bold text-white">Citizen</span>
+                        {accountType === 'consumer' && (
+                          <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#FF2638] flex items-center justify-center text-white">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={`p-1.5 rounded-lg ${accountType === 'consumer' ? 'bg-[#FF2638]/20 text-[#FF2638]' : 'bg-[#1F2028] text-slate-400'}`}>
+                              <User className="w-4 h-4" />
+                            </div>
+                            <span className="text-xs font-bold text-white">Consumer</span>
+                          </div>
+                          <p className="text-[11px] text-[#A5A7B0] leading-snug">
+                            General citizen & consumer quick commodity screening.
+                          </p>
                         </div>
-                        <span className="text-[10px] text-[#A5A7B0]">Quick label verification</span>
-                      </button>
+                        <div className="mt-2.5 pt-2 border-t border-[#292B34]/60">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Immediate Access
+                          </span>
+                        </div>
+                      </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setRole('inspector')}
-                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col ${
-                          role === 'inspector'
-                            ? 'border-[#FF2638] bg-[#FF2638]/10 text-white'
-                            : 'border-[#292B34] bg-[#101116] text-[#A5A7B0] hover:border-slate-600'
+                      {/* Legal Metrology Inspector Card */}
+                      <div
+                        onClick={() => setAccountType('inspector')}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden ${
+                          accountType === 'inspector'
+                            ? 'border-[#FF2638] bg-[#FF2638]/10 ring-1 ring-[#FF2638]/50 shadow-md shadow-[#FF2638]/10'
+                            : 'border-[#292B34] bg-[#101116] hover:border-slate-600 hover:bg-[#15161D]'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <Shield className="w-3.5 h-3.5 text-[#FF2638]" />
-                          <span className="text-xs font-bold text-white">Inspector</span>
+                        {accountType === 'inspector' && (
+                          <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#FF2638] flex items-center justify-center text-white">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={`p-1.5 rounded-lg ${accountType === 'inspector' ? 'bg-[#FF2638]/20 text-[#FF2638]' : 'bg-[#1F2028] text-slate-400'}`}>
+                              <Shield className="w-4 h-4" />
+                            </div>
+                            <span className="text-xs font-bold text-white">Inspector</span>
+                          </div>
+                          <p className="text-[11px] text-[#A5A7B0] leading-snug">
+                            Official Legal Metrology enforcement officers.
+                          </p>
                         </div>
-                        <span className="text-[10px] text-[#A5A7B0]">Full audit suite & notices</span>
-                      </button>
+                        <div className="mt-2.5 pt-2 border-t border-[#292B34]/60">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400">
+                            <AlertCircle className="w-3 h-3" />
+                            Requires Verification
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Common Field: Full Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-[#A5A7B0]" />
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="e.g. Rajesh Kumar"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                    />
+                  </div>
+
+                  {/* Common Field: Email Address */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-[#A5A7B0]" />
@@ -434,11 +558,144 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="user@example.com"
+                      placeholder={accountType === 'inspector' ? 'officer@dept.gov.in' : 'citizen@example.com'}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
                     />
                   </div>
 
+                  {/* Inspector Specific Verification Section */}
+                  {accountType === 'inspector' && (
+                    <div className="p-3.5 rounded-xl bg-[#0F1015] border border-[#292B34] space-y-3">
+                      <div className="flex items-center gap-2 pb-1.5 border-b border-[#20222B]">
+                        <Shield className="w-4 h-4 text-[#FF2638]" />
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">
+                          Inspector Verification Details
+                        </span>
+                      </div>
+
+                      {/* Inspector ID / Badge Number */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                          <span>Inspector ID / Badge Number</span>
+                          <span className="text-[#FF2638]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required={accountType === 'inspector'}
+                          value={inspectorId}
+                          onChange={(e) => setInspectorId(e.target.value)}
+                          placeholder="e.g. LM-KA-2024-089"
+                          className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                        />
+                      </div>
+
+                      {/* Department / Authority */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                          <Building2 className="w-3 h-3 text-[#A5A7B0]" />
+                          <span>Department / Authority</span>
+                          <span className="text-[#FF2638]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required={accountType === 'inspector'}
+                          value={department}
+                          onChange={(e) => setDepartment(e.target.value)}
+                          placeholder="e.g. Department of Legal Metrology"
+                          className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                        />
+                      </div>
+
+                      {/* Jurisdiction State & District */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-[#A5A7B0]" />
+                            <span>State / UT</span>
+                            <span className="text-[#FF2638]">*</span>
+                          </label>
+                          <select
+                            value={state}
+                            onChange={(e) => setState(e.target.value)}
+                            className="w-full px-2.5 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white text-xs focus:outline-none focus:border-[#FF2638]"
+                          >
+                            {INDIAN_STATES.map((st) => (
+                              <option key={st} value={st} className="bg-[#14151B] text-white">
+                                {st}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                            <span>District / Zone</span>
+                            <span className="text-[#FF2638]">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required={accountType === 'inspector'}
+                            value={district}
+                            onChange={(e) => setDistrict(e.target.value)}
+                            placeholder="e.g. Bengaluru Urban"
+                            className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Supporting Document Upload (Optional) */}
+                      <div className="space-y-1 pt-1">
+                        <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3 h-3 text-[#A5A7B0]" />
+                            Supporting Document (ID / Appointment Order)
+                          </span>
+                          <span className="text-[10px] text-[#71737E]">Optional</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept=".pdf,.png,.jpg,.jpeg"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setSupportingDocFile(e.target.files[0]);
+                              }
+                            }}
+                            className="hidden"
+                            id="inspector-doc-upload"
+                          />
+                          <label
+                            htmlFor="inspector-doc-upload"
+                            className="flex items-center justify-between px-3 py-2 rounded-lg border border-dashed border-[#292B34] bg-[#14151B] hover:border-[#FF2638]/60 cursor-pointer text-xs transition-colors"
+                          >
+                            <span className="text-[#A5A7B0] truncate">
+                              {supportingDocFile ? supportingDocFile.name : 'Click to attach ID Card or Official Order (PDF/JPG)'}
+                            </span>
+                            <UploadCloud className="w-4 h-4 text-[#FF2638] shrink-0 ml-2" />
+                          </label>
+                          {supportingDocFile && (
+                            <button
+                              type="button"
+                              onClick={() => setSupportingDocFile(null)}
+                              className="text-[10px] text-red-400 hover:text-red-300 mt-1 inline-block"
+                            >
+                              Remove attached document
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Info Notice for Inspector Approval */}
+                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-[11px] text-amber-300/90 leading-relaxed flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                        <span>
+                          <strong>Verification Policy:</strong> Inspector accounts require approval by the Legal Metrology Administrator. While your request is pending review, you can still access the Consumer workspace.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Password Field */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-[#A5A7B0]" />
@@ -465,6 +722,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     </div>
                   </div>
 
+                  {/* Confirm Password Field */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-[#A5A7B0]" />
@@ -496,8 +754,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     disabled={loading}
                     className="w-full py-3 px-4 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-sm font-bold shadow-lg shadow-[#FF2638]/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
-                    {loading ? 'Creating Account...' : 'Create RuleVision Account'}
-                    <ArrowRight className="w-4 h-4" />
+                    {loading ? (
+                      'Processing Request...'
+                    ) : accountType === 'inspector' ? (
+                      <>
+                        <span>Submit Inspector Access Request</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    ) : (
+                      <>
+                        <span>Create RuleVision Account</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
 
                   <div className="pt-2 text-center">

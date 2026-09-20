@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppShell, PageId } from './components/AppShell';
 import { AuthScreen } from './components/AuthScreen';
+import { InspectorPendingApprovalPage } from './components/InspectorPendingApprovalPage';
 import { ConsumerQuickCheckPage } from './pages/ConsumerQuickCheckPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { InspectProductPage } from './pages/InspectProductPage';
@@ -9,6 +10,7 @@ import { HistoryPage } from './pages/HistoryPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { RulesConfigPage } from './pages/RulesConfigPage';
 import { RecycleBinPage } from './pages/RecycleBinPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { InspectionRecord, UserProfile } from './types';
 import { dbService } from './services/db';
 import { authService } from './services/authService';
@@ -23,6 +25,8 @@ export default function App() {
   const [inspections, setInspections] = useState<InspectionRecord[]>([]);
   const [deletedInspections, setDeletedInspections] = useState<InspectionRecord[]>([]);
   const [activeInspection, setActiveInspection] = useState<InspectionRecord | null>(null);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
+  const [consumerModeOverride, setConsumerModeOverride] = useState<boolean>(false);
 
   // Sync theme with HTML root class
   useEffect(() => {
@@ -50,7 +54,16 @@ export default function App() {
     });
   }, []);
 
-  // Load active and deleted inspections for inspector
+  // Load pending inspector requests count for admins
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      authService.getInspectorRequests().then(reqs => {
+        setPendingRequestsCount(reqs.filter(r => r.status === 'pending').length);
+      }).catch(err => console.warn('Could not count pending requests:', err));
+    }
+  }, [currentUser, currentPage]);
+
+  // Load active and deleted inspections for inspector or admin
   const loadData = useCallback(async () => {
     try {
       const [activeRecords, deletedRecords] = await Promise.all([
@@ -65,8 +78,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Only load full inspection database if user has inspector role
-    if (currentUser?.role === 'inspector') {
+    // Load full inspection database if user has inspector or admin role
+    if (currentUser?.role === 'inspector' || currentUser?.role === 'admin') {
       loadData();
     }
   }, [currentUser, loadData]);
@@ -139,6 +152,7 @@ export default function App() {
     setActiveInspection(null);
     setInspections([]);
     setDeletedInspections([]);
+    setConsumerModeOverride(false);
   };
 
   // 1. FIRST SCREEN: LOGIN / AUTH SCREEN
@@ -147,6 +161,7 @@ export default function App() {
       <AuthScreen
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          setConsumerModeOverride(false);
         }}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
@@ -154,11 +169,13 @@ export default function App() {
     );
   }
 
-  // 2. CONSUMER DASHBOARD (Citizen experience with saved real-time inspections)
-  if (currentUser.role === 'consumer') {
+  // 2. PENDING INSPECTOR SCREEN: Show dedicated status dossier unless user clicked continue to consumer
+  if (currentUser.inspector_status === 'pending' && !consumerModeOverride) {
     return (
-      <ConsumerQuickCheckPage
+      <InspectorPendingApprovalPage
         currentUser={currentUser}
+        onStatusUpdated={(updatedUser) => setCurrentUser(updatedUser)}
+        onContinueToConsumer={() => setConsumerModeOverride(true)}
         onLogout={handleLogout}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
@@ -166,7 +183,21 @@ export default function App() {
     );
   }
 
-  // 3. INSPECTOR DASHBOARD & SUITE
+  // 3. CONSUMER DASHBOARD (Citizen experience with saved real-time inspections)
+  // Shown for consumer role or when pending inspector chooses to continue to consumer view
+  if (currentUser.role === 'consumer') {
+    return (
+      <ConsumerQuickCheckPage
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        onViewPendingStatus={() => setConsumerModeOverride(false)}
+      />
+    );
+  }
+
+  // 4. INSPECTOR & ADMIN DASHBOARD & SUITE
   return (
     <AppShell
       currentPage={currentPage}
@@ -174,6 +205,7 @@ export default function App() {
       isDarkMode={isDarkMode}
       onToggleTheme={toggleTheme}
       recycleBinCount={deletedInspections.length}
+      pendingRequestsCount={pendingRequestsCount}
       currentUser={currentUser}
       onLogout={handleLogout}
     >
@@ -224,6 +256,11 @@ export default function App() {
       )}
 
       {currentPage === 'rules' && <RulesConfigPage />}
+
+      {currentPage === 'admin-requests' && (
+        <AdminDashboardPage currentUser={currentUser} />
+      )}
     </AppShell>
   );
 }
+

@@ -25,7 +25,8 @@ import {
   User,
   History,
   Eye,
-  ArrowRight
+  ArrowRight,
+  Clock
 } from 'lucide-react';
 import { BrandLogo } from '../components/BrandLogo';
 import { InspectionRecord, ExtractedPackageData, UserProfile } from '../types';
@@ -39,6 +40,7 @@ interface ConsumerQuickCheckPageProps {
   onLogout?: () => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  onViewPendingStatus?: () => void;
 }
 
 export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
@@ -46,7 +48,8 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
   onSwitchMode,
   onLogout,
   isDarkMode,
-  onToggleTheme
+  onToggleTheme,
+  onViewPendingStatus
 }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string>('package_photo.jpg');
@@ -259,6 +262,39 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-4xl mx-auto w-full p-4 sm:p-6 space-y-6">
+        {/* Status Banner for Pending Inspector Request */}
+        {currentUser?.inspector_status === 'pending' && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-300 shadow-sm">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 sm:mt-0 animate-spin" />
+              <div>
+                <strong className="font-bold text-white">Inspector Access Request Pending:</strong> Your application for Legal Metrology Officer access ({currentUser.inspector_id || 'ID under verification'}) is awaiting administrative approval.
+              </div>
+            </div>
+            {onViewPendingStatus && (
+              <button
+                type="button"
+                onClick={onViewPendingStatus}
+                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold whitespace-nowrap transition-colors cursor-pointer text-xs self-start sm:self-auto"
+              >
+                View Status Dossier
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Status Banner for Rejected Inspector Request */}
+        {currentUser?.inspector_status === 'rejected' && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs text-red-300 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              <div>
+                <strong className="font-bold text-white">Inspector Role Not Granted:</strong> Your previous application for enforcement privileges was reviewed and not approved. You can continue inspecting commodities as a Consumer.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Welcome Banner */}
         <div className="bg-white dark:bg-[#14151B] rounded-2xl border border-slate-200 dark:border-[#292B34] p-5 sm:p-6 shadow-2xs space-y-2">
           <div className="flex items-center gap-2">

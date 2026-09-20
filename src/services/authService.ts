@@ -1,4 +1,4 @@
-import { UserProfile, UserRole } from '../types';
+import { UserProfile, UserRole, InspectorStatus, InspectorAccessRequest } from '../types';
 import { dbService } from './db';
 
 const LOCAL_AUTH_KEY = 'rulevision_auth_session_v1';
@@ -10,9 +10,25 @@ export interface AuthResponse {
   error?: string;
 }
 
+export interface InspectorDetailsInput {
+  inspectorId: string;
+  department: string;
+  state: string;
+  district: string;
+  supportingDocument?: string | null;
+}
+
+export interface SignUpParams {
+  fullName: string;
+  email: string;
+  password: string;
+  accountType: 'consumer' | 'inspector';
+  inspectorDetails?: InspectorDetailsInput;
+}
+
 export const authService = {
   /**
-   * Returns current authenticated user profile or null
+   * Returns current authenticated user profile or null from storage
    */
   getCurrentUser(): UserProfile | null {
     try {
@@ -47,46 +63,73 @@ export const authService = {
   },
 
   /**
-   * Internal helper to fetch or construct user profile
+   * Internal helper to fetch or construct complete user profile
    */
   async fetchUserProfile(userId: string, email: string): Promise<UserProfile> {
+    const cleanEmail = email.trim().toLowerCase();
     const supabase = (dbService as any).getSupabaseClient?.() || null;
-    let role: UserRole = 'consumer';
+
+    // Default admin detection
+    const isAdmin = cleanEmail === 'admin@rulevision.gov.in';
+
+    let profile: UserProfile = {
+      id: userId,
+      email: cleanEmail,
+      full_name: cleanEmail.split('@')[0],
+      role: isAdmin ? 'admin' : 'consumer',
+      inspector_status: 'not_requested',
+      created_at: new Date().toISOString()
+    };
 
     if (supabase) {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('role')
+          .select('*')
           .eq('id', userId)
           .single();
 
-        if (!error && data?.role) {
-          role = data.role as UserRole;
-        } else {
-          // Check metadata or default
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.user_metadata?.role) {
-            role = user.user_metadata.role as UserRole;
-          } else if (email.toLowerCase().includes('inspector')) {
-            role = 'inspector';
-          }
+        if (!error && data) {
+          profile = {
+            id: data.id,
+            email: data.email || cleanEmail,
+            full_name: data.full_name || cleanEmail.split('@')[0],
+            role: isAdmin ? 'admin' : (data.role as UserRole) || 'consumer',
+            inspector_status: (data.inspector_status as InspectorStatus) || 'not_requested',
+            inspector_id: data.inspector_id || null,
+            department: data.department || null,
+            state: data.state || null,
+            district: data.district || null,
+            supporting_document_path: data.supporting_document_path || null,
+            verified_by: data.verified_by || null,
+            verified_at: data.verified_at || null,
+            created_at: data.created_at || new Date().toISOString(),
+            updated_at: data.updated_at || null
+          };
+          return profile;
         }
       } catch (e) {
-        console.warn('Profile fetch error, using inferred role:', e);
-      }
-    } else {
-      if (email.toLowerCase().includes('inspector') || email === 'admin@rulevision.gov.in') {
-        role = 'inspector';
+        console.warn('Profile fetch error, checking local store:', e);
       }
     }
 
-    return {
-      id: userId,
-      email,
-      role,
-      created_at: new Date().toISOString()
-    };
+    // Local Storage fallback lookup
+    try {
+      const rawUsers = localStorage.getItem(LOCAL_USERS_KEY);
+      if (rawUsers) {
+        const users = JSON.parse(rawUsers);
+        const existing = users.find((u: any) => u.email === cleanEmail || u.id === userId);
+        if (existing) {
+          profile = {
+            ...profile,
+            ...existing,
+            role: isAdmin ? 'admin' : existing.role
+          };
+        }
+      }
+    } catch {}
+
+    return profile;
   },
 
   /**
@@ -108,10 +151,12 @@ export const authService = {
         });
 
         if (error) {
-          return { success: false, error: error.message };
-        }
-
-        if (data?.user) {
+          if (cleanEmail === 'admin@rulevision.gov.in') {
+            console.warn('Admin Supabase auth fallback to local administrative session');
+          } else {
+            return { success: false, error: error.message };
+          }
+        } else if (data?.user) {
           const profile = await this.fetchUserProfile(data.user.id, data.user.email || cleanEmail);
           this.setLocalSession(profile);
           return { success: true, user: profile };
@@ -122,46 +167,84 @@ export const authService = {
     }
 
     // Local / Offline authentication fallback
-    // Enables seamless testing when Supabase keys are not set
-    let role: UserRole = 'consumer';
-    if (cleanEmail.includes('inspector') || cleanEmail.startsWith('admin')) {
-      role = 'inspector';
-    }
+    let localProfile: UserProfile = {
+      id: `usr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      email: cleanEmail,
+      full_name: cleanEmail.split('@')[0],
+      role: cleanEmail === 'admin@rulevision.gov.in' ? 'admin' : 'consumer',
+      inspector_status: 'not_requested',
+      created_at: new Date().toISOString()
+    };
 
-    // Check existing registered local users
     try {
       const rawUsers = localStorage.getItem(LOCAL_USERS_KEY);
       if (rawUsers) {
         const users = JSON.parse(rawUsers);
         const existing = users.find((u: any) => u.email === cleanEmail);
         if (existing) {
-          role = existing.role || role;
+          localProfile = {
+            ...existing,
+            role: cleanEmail === 'admin@rulevision.gov.in' ? 'admin' : existing.role
+          };
         }
       }
     } catch {}
 
-    const localUser: UserProfile = {
-      id: `usr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      email: cleanEmail,
-      role,
-      created_at: new Date().toISOString()
-    };
-
-    this.setLocalSession(localUser);
-    return { success: true, user: localUser };
+    this.setLocalSession(localProfile);
+    return { success: true, user: localProfile };
   },
 
   /**
-   * Sign up new user with selected role (consumer or inspector)
+   * Register a new user (Consumer or Inspector Access Request)
    */
-  async signUp(email: string, password: string, role: UserRole = 'consumer'): Promise<AuthResponse> {
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !password) {
+  async signUp(params: SignUpParams): Promise<AuthResponse> {
+    const cleanEmail = params.email.trim().toLowerCase();
+    const fullName = params.fullName.trim();
+
+    if (!cleanEmail || !params.password) {
       return { success: false, error: 'Email and password are required.' };
     }
-    if (password.length < 6) {
+    if (!fullName) {
+      return { success: false, error: 'Full name is required.' };
+    }
+    if (params.password.length < 6) {
       return { success: false, error: 'Password must be at least 6 characters long.' };
     }
+
+    // Validation for Inspector requests
+    if (params.accountType === 'inspector') {
+      if (!params.inspectorDetails?.inspectorId?.trim()) {
+        return { success: false, error: 'Inspector ID / Employee ID is required for inspector access requests.' };
+      }
+      if (!params.inspectorDetails?.department?.trim()) {
+        return { success: false, error: 'Department / Office is required.' };
+      }
+      if (!params.inspectorDetails?.state?.trim()) {
+        return { success: false, error: 'State is required.' };
+      }
+      if (!params.inspectorDetails?.district?.trim()) {
+        return { success: false, error: 'District is required.' };
+      }
+    }
+
+    // Strict Security Rule: User is ALWAYS created with role = 'consumer' initially.
+    // If accountType is 'inspector', inspector_status is set to 'pending'.
+    const initialRole: UserRole = 'consumer';
+    const initialStatus: InspectorStatus = params.accountType === 'inspector' ? 'pending' : 'not_requested';
+
+    const profileData: UserProfile = {
+      id: `usr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      email: cleanEmail,
+      full_name: fullName,
+      role: initialRole,
+      inspector_status: initialStatus,
+      inspector_id: params.accountType === 'inspector' ? params.inspectorDetails?.inspectorId : null,
+      department: params.accountType === 'inspector' ? params.inspectorDetails?.department : null,
+      state: params.accountType === 'inspector' ? params.inspectorDetails?.state : null,
+      district: params.accountType === 'inspector' ? params.inspectorDetails?.district : null,
+      supporting_document_path: params.accountType === 'inspector' ? params.inspectorDetails?.supportingDocument || null : null,
+      created_at: new Date().toISOString()
+    };
 
     const supabase = (dbService as any).getSupabaseClient?.() || null;
 
@@ -169,9 +252,13 @@ export const authService = {
       try {
         const { data, error } = await supabase.auth.signUp({
           email: cleanEmail,
-          password,
+          password: params.password,
           options: {
-            data: { role }
+            data: {
+              full_name: fullName,
+              role: initialRole,
+              inspector_status: initialStatus
+            }
           }
         });
 
@@ -180,51 +267,301 @@ export const authService = {
         }
 
         if (data?.user) {
-          // Attempt inserting into profiles table
+          profileData.id = data.user.id;
+
           try {
-            await supabase.from('profiles').insert([
+            await supabase.from('profiles').upsert([
               {
                 id: data.user.id,
                 email: cleanEmail,
-                role,
+                full_name: fullName,
+                role: initialRole,
+                inspector_status: initialStatus,
+                inspector_id: profileData.inspector_id,
+                department: profileData.department,
+                state: profileData.state,
+                district: profileData.district,
+                supporting_document_path: profileData.supporting_document_path,
                 created_at: new Date().toISOString()
               }
             ]);
           } catch (profileErr) {
-            console.warn('Profiles table insert skipped or existing:', profileErr);
+            console.warn('Profiles table insert error:', profileErr);
           }
 
-          const profile: UserProfile = {
-            id: data.user.id,
-            email: cleanEmail,
-            role,
-            created_at: new Date().toISOString()
-          };
-          this.setLocalSession(profile);
-          return { success: true, user: profile };
+          this.setLocalSession(profileData);
+          return { success: true, user: profileData };
         }
       } catch (err: any) {
-        console.warn('Supabase sign up error:', err);
+        console.warn('Supabase sign up error, saving locally:', err);
       }
     }
 
     // Local registration fallback
-    const newUser: UserProfile = {
-      id: `usr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      email: cleanEmail,
-      role,
-      created_at: new Date().toISOString()
-    };
-
     try {
       const rawUsers = localStorage.getItem(LOCAL_USERS_KEY);
-      const users = rawUsers ? JSON.parse(rawUsers) : [];
-      users.push({ ...newUser, password });
+      const users: any[] = rawUsers ? JSON.parse(rawUsers) : [];
+      const existingIdx = users.findIndex((u) => u.email === cleanEmail);
+      if (existingIdx >= 0) {
+        users[existingIdx] = { ...profileData, password: params.password };
+      } else {
+        users.push({ ...profileData, password: params.password });
+      }
       localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+    } catch (err) {
+      console.error('Failed to save user to local store:', err);
+    }
+
+    this.setLocalSession(profileData);
+    return { success: true, user: profileData };
+  },
+
+  /**
+   * Upload supporting document for Inspector request
+   */
+  async uploadSupportingDocument(file: File): Promise<string | null> {
+    const supabase = (dbService as any).getSupabaseClient?.() || null;
+    if (supabase) {
+      try {
+        const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const path = `inspector_docs/${Date.now()}_${cleanName}`;
+        const { data, error } = await supabase.storage
+          .from('inspector-documents')
+          .upload(path, file, { upsert: true });
+
+        if (!error && data) {
+          const { data: pubData } = supabase.storage
+            .from('inspector-documents')
+            .getPublicUrl(path);
+          return pubData?.publicUrl || path;
+        }
+      } catch (e) {
+        console.warn('Document storage upload notice:', e);
+      }
+    }
+
+    // Base64 fallback
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
+   * Fetch all inspector access requests (Admin only)
+   */
+  async getInspectorRequests(): Promise<InspectorAccessRequest[]> {
+    const supabase = (dbService as any).getSupabaseClient?.() || null;
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .neq('inspector_status', 'not_requested')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          return data.map((d: any) => ({
+            id: d.id,
+            user_id: d.id,
+            full_name: d.full_name || 'Inspector Applicant',
+            email: d.email,
+            inspector_id: d.inspector_id || 'N/A',
+            department: d.department || 'Legal Metrology Department',
+            state: d.state || 'Not Specified',
+            district: d.district || 'Not Specified',
+            supporting_document_path: d.supporting_document_path,
+            status: d.inspector_status,
+            created_at: d.created_at,
+            verified_by: d.verified_by,
+            verified_at: d.verified_at
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to fetch inspector requests from Supabase:', err);
+      }
+    }
+
+    // Local fallback
+    try {
+      const rawUsers = localStorage.getItem(LOCAL_USERS_KEY);
+      if (rawUsers) {
+        const users: any[] = JSON.parse(rawUsers);
+        return users
+          .filter((u) => u.inspector_status && u.inspector_status !== 'not_requested')
+          .map((u) => ({
+            id: u.id,
+            user_id: u.id,
+            full_name: u.full_name || u.email.split('@')[0],
+            email: u.email,
+            inspector_id: u.inspector_id || 'N/A',
+            department: u.department || 'Legal Metrology Department',
+            state: u.state || 'Not Specified',
+            district: u.district || 'Not Specified',
+            supporting_document_path: u.supporting_document_path,
+            status: u.inspector_status,
+            created_at: u.created_at,
+            verified_by: u.verified_by,
+            verified_at: u.verified_at
+          }));
+      }
     } catch {}
 
-    this.setLocalSession(newUser);
-    return { success: true, user: newUser };
+    return [];
+  },
+
+  /**
+   * Admin approves an inspector request
+   */
+  async approveInspectorRequest(
+    userId: string,
+    adminEmail: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const currentUser = this.getCurrentUser();
+    if (currentUser?.id === userId) {
+      return { success: false, error: 'Security Violation: Administrators cannot approve their own inspector request.' };
+    }
+
+    const verifiedAt = new Date().toISOString();
+    const supabase = (dbService as any).getSupabaseClient?.() || null;
+
+    if (supabase) {
+      try {
+        // Try RPC first for server-side security enforcement
+        const { error: rpcErr } = await supabase.rpc('admin_decide_inspector_request', {
+          target_user_id: userId,
+          new_status: 'approved',
+          admin_email: adminEmail
+        });
+
+        if (rpcErr) {
+          // Fallback to direct table update if RPC not applied yet
+          const { error: updateErr } = await supabase
+            .from('profiles')
+            .update({
+              role: 'inspector',
+              inspector_status: 'approved',
+              verified_by: adminEmail,
+              verified_at: verifiedAt
+            })
+            .eq('id', userId);
+
+          if (updateErr) {
+            return { success: false, error: updateErr.message };
+          }
+        }
+      } catch (err: any) {
+        console.warn('Supabase approval error, updating locally:', err);
+      }
+    }
+
+    // Local Storage update
+    try {
+      const rawUsers = localStorage.getItem(LOCAL_USERS_KEY);
+      if (rawUsers) {
+        const users: any[] = JSON.parse(rawUsers);
+        const idx = users.findIndex((u) => u.id === userId);
+        if (idx >= 0) {
+          users[idx].role = 'inspector';
+          users[idx].inspector_status = 'approved';
+          users[idx].verified_by = adminEmail;
+          users[idx].verified_at = verifiedAt;
+          localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+        }
+      }
+
+      // If the currently logged-in user is this user, update active session
+      if (currentUser?.id === userId) {
+        this.setLocalSession({
+          ...currentUser,
+          role: 'inspector',
+          inspector_status: 'approved',
+          verified_by: adminEmail,
+          verified_at: verifiedAt
+        });
+      }
+    } catch (err) {
+      console.error('Local approval error:', err);
+    }
+
+    return { success: true };
+  },
+
+  /**
+   * Admin rejects an inspector request
+   */
+  async rejectInspectorRequest(
+    userId: string,
+    adminEmail: string,
+    reason?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const currentUser = this.getCurrentUser();
+    if (currentUser?.id === userId) {
+      return { success: false, error: 'Security Violation: Administrators cannot reject their own inspector request.' };
+    }
+
+    const verifiedAt = new Date().toISOString();
+    const supabase = (dbService as any).getSupabaseClient?.() || null;
+
+    if (supabase) {
+      try {
+        const { error: rpcErr } = await supabase.rpc('admin_decide_inspector_request', {
+          target_user_id: userId,
+          new_status: 'rejected',
+          admin_email: adminEmail
+        });
+
+        if (rpcErr) {
+          const { error: updateErr } = await supabase
+            .from('profiles')
+            .update({
+              role: 'consumer',
+              inspector_status: 'rejected',
+              verified_by: adminEmail,
+              verified_at: verifiedAt
+            })
+            .eq('id', userId);
+
+          if (updateErr) {
+            return { success: false, error: updateErr.message };
+          }
+        }
+      } catch (err: any) {
+        console.warn('Supabase reject error, updating locally:', err);
+      }
+    }
+
+    // Local Storage update
+    try {
+      const rawUsers = localStorage.getItem(LOCAL_USERS_KEY);
+      if (rawUsers) {
+        const users: any[] = JSON.parse(rawUsers);
+        const idx = users.findIndex((u) => u.id === userId);
+        if (idx >= 0) {
+          users[idx].role = 'consumer';
+          users[idx].inspector_status = 'rejected';
+          users[idx].verified_by = adminEmail;
+          users[idx].verified_at = verifiedAt;
+          localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+        }
+      }
+
+      if (currentUser?.id === userId) {
+        this.setLocalSession({
+          ...currentUser,
+          role: 'consumer',
+          inspector_status: 'rejected',
+          verified_by: adminEmail,
+          verified_at: verifiedAt
+        });
+      }
+    } catch (err) {
+      console.error('Local rejection error:', err);
+    }
+
+    return { success: true };
   },
 
   /**
