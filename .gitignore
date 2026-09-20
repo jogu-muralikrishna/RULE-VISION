@@ -1,0 +1,13 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+scratch/*.js
+scratch/*.bin
+scratch/extracted_images/
+scratch/pptx_images/
+scratch/telegram_pdf_images/

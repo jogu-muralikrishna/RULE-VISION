@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-noir-950: #08090C;
+  --color-noir-900: #101116;
+  --color-noir-850: #14151B;
+  --color-noir-800: #1B1C23;
+  --color-noir-700: #292B34;
+  --color-crimson-500: #FF2638;
+  --color-crimson-600: #E61E30;
+  --color-crimson-700: #B51226;
+  --color-noir-text-primary: #F5F5F7;
+  --color-noir-text-secondary: #A5A7B0;
+}
+
+/* Red Noir Ambient Glow Utilities */
+.glow-crimson {
+  box-shadow: 0 0 25px -5px rgba(255, 38, 56, 0.25);
+}
+
+.glow-crimson-sm {
+  box-shadow: 0 0 15px -3px rgba(255, 38, 56, 0.20);
+}
+
+.glow-crimson-lg {
+  box-shadow: 0 0 40px -8px rgba(255, 38, 56, 0.35);
+}
+
+.border-crimson-glow {
+  border-color: rgba(255, 38, 56, 0.4);
+  box-shadow: 0 0 15px -3px rgba(255, 38, 56, 0.25);
+}
+
+/* Background Gradients */
+.bg-radial-crimson {
+  background: radial-gradient(circle at 50% 0%, rgba(181, 18, 38, 0.18) 0%, rgba(8, 9, 12, 0) 70%);
+}
+
+@keyframes scanlaser {
+  0% {
+    top: 2%;
+    opacity: 0.85;
+  }
+  50% {
+    top: 95%;
+    opacity: 1;
+  }
+  100% {
+    top: 2%;
+    opacity: 0.85;
+  }
+}
+
+.animate-scanlaser {
+  animation: scanlaser 2.2s ease-in-out infinite;
+}

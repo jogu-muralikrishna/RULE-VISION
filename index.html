@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RuleVision | AI-Powered Legal Metrology Compliance Auditor</title>
+    <meta name="description" content="RuleVision - AI-Powered Legal Metrology Compliance Auditor for checking statutory declarations under Legal Metrology (Packaged Commodities) Rules, 2011." />
+    <meta property="og:title" content="RuleVision | AI-Powered Legal Metrology Compliance Auditor" />
+    <meta property="og:description" content="RuleVision - AI-Powered Legal Metrology Compliance Auditor for checking statutory declarations under Legal Metrology (Packaged Commodities) Rules, 2011." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="./assets/rulevision_logo.png" />
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased font-sans">
+    <div id="root"></div>
+    <!-- 1. Vite Development Mode Entry Point -->
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- 2. Live Server & Static Preview Auto-Fallback -->
+    <script>
+      (function() {
+        var fallbackLoaded = false;
+        function mountBundle() {
+          if (fallbackLoaded) return;
+          var root = document.getElementById('root');
+          if (root && (!root.childNodes || root.childNodes.length === 0)) {
+            fallbackLoaded = true;
+            console.log('[RuleVision] Live Server detected. Loading production bundle...');
+            var css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = './assets/index-CC3JUzrk.css';
+            document.head.appendChild(css);
+
+            var js = document.createElement('script');
+            js.type = 'module';
+            js.crossOrigin = 'anonymous';
+            js.src = './assets/index-tZqgoC7P.js';
+            document.body.appendChild(js);
+          }
+        }
+
+        window.addEventListener('error', function(e) {
+          if ((e.filename && e.filename.indexOf('main.tsx') !== -1) || (e.message && e.message.indexOf('main.tsx') !== -1)) {
+            mountBundle();
+          }
+        });
+        setTimeout(mountBundle, 800);
+      })();
+    </script>
+  </body>
+</html>
+
