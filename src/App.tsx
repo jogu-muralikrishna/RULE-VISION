@@ -193,6 +193,10 @@ export default function App() {
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         onViewPendingStatus={() => setConsumerModeOverride(false)}
+        onProfileUpdated={(updated) => {
+          setCurrentUser(updated);
+          setConsumerModeOverride(false);
+        }}
       />
     );
   }

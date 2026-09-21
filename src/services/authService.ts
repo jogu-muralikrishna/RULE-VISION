@@ -565,6 +565,94 @@ export const authService = {
   },
 
   /**
+   * Reapply for Inspector Access (for rejected or not_requested users)
+   */
+  async reapplyInspectorRequest(
+    userId: string,
+    details: InspectorDetailsInput
+  ): Promise<AuthResponse> {
+    if (!details.inspectorId?.trim()) {
+      return { success: false, error: 'Inspector ID / Employee ID is required.' };
+    }
+    if (!details.department?.trim()) {
+      return { success: false, error: 'Department / Office is required.' };
+    }
+    if (!details.state?.trim()) {
+      return { success: false, error: 'State is required.' };
+    }
+    if (!details.district?.trim()) {
+      return { success: false, error: 'District is required.' };
+    }
+
+    const currentUser = this.getCurrentUser();
+    const updatedProfile: UserProfile = {
+      ...(currentUser || {
+        id: userId,
+        email: '',
+        full_name: '',
+        created_at: new Date().toISOString()
+      }),
+      role: 'consumer', // Kept as consumer until admin approval
+      inspector_status: 'pending',
+      inspector_id: details.inspectorId.trim(),
+      department: details.department.trim(),
+      state: details.state.trim(),
+      district: details.district.trim(),
+      supporting_document_path: details.supportingDocument || currentUser?.supporting_document_path || null,
+      verified_by: null,
+      verified_at: null,
+      updated_at: new Date().toISOString()
+    };
+
+    const supabase = (dbService as any).getSupabaseClient?.() || null;
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            inspector_status: 'pending',
+            inspector_id: updatedProfile.inspector_id,
+            department: updatedProfile.department,
+            state: updatedProfile.state,
+            district: updatedProfile.district,
+            supporting_document_path: updatedProfile.supporting_document_path,
+            verified_by: null,
+            verified_at: null,
+            updated_at: updatedProfile.updated_at
+          })
+          .eq('id', userId);
+
+        if (error) {
+          console.warn('Supabase reapply update error:', error);
+        }
+      } catch (e) {
+        console.warn('Supabase reapply notice:', e);
+      }
+    }
+
+    // Local Storage update
+    try {
+      const rawUsers = localStorage.getItem(LOCAL_USERS_KEY);
+      if (rawUsers) {
+        const users: any[] = JSON.parse(rawUsers);
+        const idx = users.findIndex((u) => u.id === userId);
+        if (idx >= 0) {
+          users[idx] = {
+            ...users[idx],
+            ...updatedProfile
+          };
+          localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+        }
+      }
+    } catch (e) {
+      console.warn('Local users update notice:', e);
+    }
+
+    this.setLocalSession(updatedProfile);
+    return { success: true, user: updatedProfile };
+  },
+
+  /**
    * Password reset request
    */
   async resetPassword(email: string): Promise<{ success: boolean; message: string }> {

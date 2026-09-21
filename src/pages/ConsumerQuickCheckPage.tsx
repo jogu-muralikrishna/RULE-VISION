@@ -26,12 +26,17 @@ import {
   History,
   Eye,
   ArrowRight,
-  Clock
+  Clock,
+  X,
+  FileText,
+  UploadCloud,
+  Shield
 } from 'lucide-react';
 import { BrandLogo } from '../components/BrandLogo';
 import { InspectionRecord, ExtractedPackageData, UserProfile } from '../types';
 import { analyzeProductImage } from '../services/inspectionService';
 import { dbService } from '../services/db';
+import { authService } from '../services/authService';
 import { StatusBadge } from '../components/StatusBadge';
 
 interface ConsumerQuickCheckPageProps {
@@ -41,6 +46,7 @@ interface ConsumerQuickCheckPageProps {
   isDarkMode: boolean;
   onToggleTheme: () => void;
   onViewPendingStatus?: () => void;
+  onProfileUpdated?: (updatedUser: UserProfile) => void;
 }
 
 export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
@@ -49,7 +55,8 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
   onLogout,
   isDarkMode,
   onToggleTheme,
-  onViewPendingStatus
+  onViewPendingStatus,
+  onProfileUpdated
 }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string>('package_photo.jpg');
@@ -59,6 +66,16 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [resultRecord, setResultRecord] = useState<InspectionRecord | null>(null);
   const [userInspections, setUserInspections] = useState<InspectionRecord[]>([]);
+
+  // Inspector re-application states for rejected users
+  const [showReapplyModal, setShowReapplyModal] = useState<boolean>(false);
+  const [reapplyInspectorId, setReapplyInspectorId] = useState<string>(currentUser?.inspector_id || '');
+  const [reapplyDepartment, setReapplyDepartment] = useState<string>(currentUser?.department || 'Department of Legal Metrology');
+  const [reapplyState, setReapplyState] = useState<string>(currentUser?.state || 'Karnataka');
+  const [reapplyDistrict, setReapplyDistrict] = useState<string>(currentUser?.district || '');
+  const [reapplyDocFile, setReapplyDocFile] = useState<File | null>(null);
+  const [reapplying, setReapplying] = useState<boolean>(false);
+  const [reapplyError, setReapplyError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -190,6 +207,50 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
     }
   };
 
+  const INDIAN_STATES = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+    'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+    'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+    'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+    'Delhi (NCT)', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+  ];
+
+  const handleReapplySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser?.id) return;
+    setReapplyError(null);
+    setReapplying(true);
+
+    try {
+      let docUrl: string | null = null;
+      if (reapplyDocFile) {
+        docUrl = await authService.uploadSupportingDocument(reapplyDocFile);
+      }
+
+      const res = await authService.reapplyInspectorRequest(currentUser.id, {
+        inspectorId: reapplyInspectorId.trim(),
+        department: reapplyDepartment.trim(),
+        state: reapplyState.trim(),
+        district: reapplyDistrict.trim(),
+        supportingDocument: docUrl
+      });
+
+      if (res.success && res.user) {
+        setShowReapplyModal(false);
+        onProfileUpdated?.(res.user);
+      } else {
+        setReapplyError(res.error || 'Failed to submit inspector request.');
+      }
+    } catch (err: any) {
+      setReapplyError(err?.message || 'Unable to submit request.');
+    } finally {
+      setReapplying(false);
+    }
+  };
+
   const handleReset = () => {
     stopCamera();
     setImageSrc(null);
@@ -285,13 +346,23 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
 
         {/* Status Banner for Rejected Inspector Request */}
         {currentUser?.inspector_status === 'rejected' && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs text-red-300 shadow-sm">
-            <div className="flex items-center gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-red-300 shadow-sm">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5 sm:mt-0" />
               <div>
-                <strong className="font-bold text-white">Inspector Role Not Granted:</strong> Your previous application for enforcement privileges was reviewed and not approved. You can continue inspecting commodities as a Consumer.
+                <strong className="font-bold text-white">Inspector Role Not Granted:</strong> Your previous application for enforcement privileges was reviewed and not approved. You can continue inspecting commodities as a Consumer, or submit an updated request.
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setReapplyError(null);
+                setShowReapplyModal(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white font-bold whitespace-nowrap transition-colors cursor-pointer text-xs self-start sm:self-auto shadow-sm"
+            >
+              Submit New Request
+            </button>
           </div>
         )}
 
@@ -691,6 +762,175 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
         </p>
         <p className="text-[11px] mt-0.5">RuleVision • AI-Powered Legal Metrology Compliance Auditor</p>
       </footer>
+
+      {/* Inspector Access Re-application Modal */}
+      {showReapplyModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#14151B] border border-[#292B34] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#292B34]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#FF2638]/20 border border-[#FF2638]/40 text-[#FF2638] flex items-center justify-center">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">
+                    Submit Inspector Access Request
+                  </h3>
+                  <p className="text-[11px] text-[#A5A7B0]">
+                    Update your credentials for Legal Metrology Administrator verification
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReapplyModal(false)}
+                className="p-1 rounded-lg text-[#71737E] hover:text-white hover:bg-[#1B1C23] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {reapplyError && (
+              <div className="p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-300 text-xs">
+                {reapplyError}
+              </div>
+            )}
+
+            <form onSubmit={handleReapplySubmit} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                  <span>Inspector ID / Employee ID</span>
+                  <span className="text-[#FF2638]">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={reapplyInspectorId}
+                  onChange={(e) => setReapplyInspectorId(e.target.value)}
+                  placeholder="e.g. LM-KA-2024-089"
+                  className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                  <Building2 className="w-3 h-3 text-[#A5A7B0]" />
+                  <span>Department / Office</span>
+                  <span className="text-[#FF2638]">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={reapplyDepartment}
+                  onChange={(e) => setReapplyDepartment(e.target.value)}
+                  placeholder="e.g. Department of Legal Metrology"
+                  className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                    <span>State</span>
+                    <span className="text-[#FF2638]">*</span>
+                  </label>
+                  <select
+                    value={reapplyState}
+                    onChange={(e) => setReapplyState(e.target.value)}
+                    className="w-full px-2.5 py-2 rounded-lg border border-[#292B34] bg-[#101116] text-white text-xs focus:outline-none focus:border-[#FF2638]"
+                  >
+                    {INDIAN_STATES.map((st) => (
+                      <option key={st} value={st} className="bg-[#14151B] text-white">
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                    <span>District</span>
+                    <span className="text-[#FF2638]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={reapplyDistrict}
+                    onChange={(e) => setReapplyDistrict(e.target.value)}
+                    placeholder="e.g. Bengaluru Urban"
+                    className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <FileText className="w-3 h-3 text-[#A5A7B0]" />
+                    Supporting Document (ID / Appointment Order)
+                  </span>
+                  <span className="text-[10px] text-[#71737E]">Optional</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setReapplyDocFile(e.target.files[0]);
+                      }
+                    }}
+                    className="hidden"
+                    id="reapply-doc-upload"
+                  />
+                  <label
+                    htmlFor="reapply-doc-upload"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg border border-dashed border-[#292B34] bg-[#101116] hover:border-[#FF2638]/60 cursor-pointer text-xs transition-colors"
+                  >
+                    <span className="text-[#A5A7B0] truncate">
+                      {reapplyDocFile ? reapplyDocFile.name : 'Click to attach ID Card or Official Order (PDF/JPG)'}
+                    </span>
+                    <UploadCloud className="w-4 h-4 text-[#FF2638] shrink-0 ml-2" />
+                  </label>
+                  {reapplyDocFile && (
+                    <button
+                      type="button"
+                      onClick={() => setReapplyDocFile(null)}
+                      className="text-[10px] text-red-400 hover:text-red-300 mt-1 inline-block"
+                    >
+                      Remove attached document
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-amber-950/40 border border-amber-800/60 text-[11px] text-amber-300/90 leading-relaxed flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                <span>
+                  <strong>Notice:</strong> Inspector access requires administrative verification. Submitting this request does not automatically grant inspector privileges.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#292B34]">
+                <button
+                  type="button"
+                  onClick={() => setShowReapplyModal(false)}
+                  className="px-3 py-2 rounded-xl border border-[#292B34] text-xs font-semibold text-[#A5A7B0] hover:text-white hover:bg-[#1B1C23] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={reapplying}
+                  className="px-4 py-2 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                >
+                  {reapplying ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

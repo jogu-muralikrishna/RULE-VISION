@@ -482,10 +482,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                             <div className={`p-1.5 rounded-lg ${accountType === 'consumer' ? 'bg-[#FF2638]/20 text-[#FF2638]' : 'bg-[#1F2028] text-slate-400'}`}>
                               <User className="w-4 h-4" />
                             </div>
-                            <span className="text-xs font-bold text-white">Consumer</span>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider">Consumer</span>
                           </div>
                           <p className="text-[11px] text-[#A5A7B0] leading-snug">
-                            General citizen & consumer quick commodity screening.
+                            Scan product labels, check declarations, and view your personal inspection history.
                           </p>
                         </div>
                         <div className="mt-2.5 pt-2 border-t border-[#292B34]/60">
@@ -515,10 +515,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                             <div className={`p-1.5 rounded-lg ${accountType === 'inspector' ? 'bg-[#FF2638]/20 text-[#FF2638]' : 'bg-[#1F2028] text-slate-400'}`}>
                               <Shield className="w-4 h-4" />
                             </div>
-                            <span className="text-xs font-bold text-white">Inspector</span>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider">Legal Metrology Inspector</span>
                           </div>
                           <p className="text-[11px] text-[#A5A7B0] leading-snug">
-                            Official Legal Metrology enforcement officers.
+                            Request inspector access to conduct and manage authorized product compliance inspections.
                           </p>
                         </div>
                         <div className="mt-2.5 pt-2 border-t border-[#292B34]/60">
@@ -551,7 +551,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-[#A5A7B0]" />
-                      Email Address
+                      {accountType === 'inspector' ? 'Official Email Address' : 'Email Address'}
                     </label>
                     <input
                       type="email"
@@ -573,10 +573,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         </span>
                       </div>
 
-                      {/* Inspector ID / Badge Number */}
+                      {/* Inspector ID / Employee ID */}
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
-                          <span>Inspector ID / Badge Number</span>
+                          <span>Inspector ID / Employee ID</span>
                           <span className="text-[#FF2638]">*</span>
                         </label>
                         <input
@@ -589,11 +589,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         />
                       </div>
 
-                      {/* Department / Authority */}
+                      {/* Department / Office */}
                       <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
                           <Building2 className="w-3 h-3 text-[#A5A7B0]" />
-                          <span>Department / Authority</span>
+                          <span>Department / Office</span>
                           <span className="text-[#FF2638]">*</span>
                         </label>
                         <input
@@ -686,11 +686,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       </div>
 
                       {/* Info Notice for Inspector Approval */}
-                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-[11px] text-amber-300/90 leading-relaxed flex items-start gap-2">
+                      <div className="p-3 rounded-lg bg-amber-950/40 border border-amber-800/60 text-[11px] text-amber-300/90 leading-relaxed flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
-                        <span>
-                          <strong>Verification Policy:</strong> Inspector accounts require approval by the Legal Metrology Administrator. While your request is pending review, you can still access the Consumer workspace.
-                        </span>
+                        <div>
+                          <strong className="text-white block mb-0.5">Administrative Verification Required</strong>
+                          <span>Inspector access requires administrative verification. Submitting this request does not automatically grant inspector privileges. While your request is pending review, you can still access the Consumer workspace.</span>
+                        </div>
                       </div>
                     </div>
                   )}
