@@ -24,7 +24,11 @@ function getEmptyPackageData(): ExtractedPackageData {
 }
 
 function getAiClient(customKey?: string): GoogleGenAI | null {
-  const apiKey = (customKey && customKey.trim() !== '') ? customKey.trim() : process.env.GEMINI_API_KEY;
+  const apiKey = (customKey && customKey.trim() !== '')
+    ? customKey.trim()
+    : (process.env.VISION_API_KEY && process.env.VISION_API_KEY.trim() !== ''
+      ? process.env.VISION_API_KEY.trim()
+      : process.env.GEMINI_API_KEY);
   if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.trim() === '') {
     return null;
   }
@@ -32,7 +36,7 @@ function getAiClient(customKey?: string): GoogleGenAI | null {
     apiKey,
     httpOptions: {
       headers: {
-        'User-Agent': 'aistudio-build',
+        'User-Agent': 'rulevision-build',
       }
     }
   });
@@ -257,7 +261,7 @@ export async function extractPackageDeclarationsFromImage(
 
     // Real OCR Scanner: Analyzes the actual pixels of the image using Tesseract.js
     try {
-      console.log('[RuleVision Vision] No Gemini API key provided. Executing real-time OCR label scanner on image pixels...');
+      console.log('[RuleVision Vision] No Vision API key provided. Executing real-time OCR label scanner on image pixels...');
       const ocrData = await scanLabelWithOCR(cleanBase64 || imageBase64, options?.productName);
       return {
         success: true,
@@ -274,7 +278,7 @@ export async function extractPackageDeclarationsFromImage(
     }
   }
 
-  // 3. Multimodal Vision AI Extraction via Gemini with Multi-Model Fallback
+  // 3. Multimodal Vision AI Extraction with Multi-Model Fallback
   try {
     let parts: any[];
 
@@ -309,7 +313,7 @@ export async function extractPackageDeclarationsFromImage(
     }
 
     // Candidate models in order of preference:
-    // Real, verified Gemini multimodal models compatible with @google/genai and Google AI Studio
+    // Verified multimodal vision models
     const CANDIDATE_MODELS = [
       'gemini-2.5-flash',
       'gemini-2.0-flash',
@@ -366,7 +370,7 @@ export async function extractPackageDeclarationsFromImage(
     try {
       parsed = JSON.parse(responseText);
     } catch (parseErr) {
-      console.error('Failed to parse Gemini JSON output:', responseText);
+      console.error('Failed to parse Vision AI JSON output:', responseText);
       if (options?.isDemo && knownDemo) {
         return { success: true, data: knownDemo };
       }

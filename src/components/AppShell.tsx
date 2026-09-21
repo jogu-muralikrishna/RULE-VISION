@@ -53,15 +53,19 @@ export const AppShell: React.FC<AppShellProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState(() => {
-    return typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_gemini_api_key') || '' : '';
+    return typeof localStorage !== 'undefined'
+      ? localStorage.getItem('rulevision_vision_api_key') || localStorage.getItem('rulevision_gemini_api_key') || ''
+      : '';
   });
   const [keySavedToast, setKeySavedToast] = useState(false);
-  const hasGeminiKey = Boolean(apiKeyInput && apiKeyInput.trim() !== '');
+  const hasVisionKey = Boolean(apiKeyInput && apiKeyInput.trim() !== '');
 
   const handleSaveApiKey = () => {
     if (apiKeyInput.trim()) {
+      localStorage.setItem('rulevision_vision_api_key', apiKeyInput.trim());
       localStorage.setItem('rulevision_gemini_api_key', apiKeyInput.trim());
     } else {
+      localStorage.removeItem('rulevision_vision_api_key');
       localStorage.removeItem('rulevision_gemini_api_key');
     }
     setKeySavedToast(true);
@@ -225,15 +229,15 @@ export const AppShell: React.FC<AppShellProps> = ({
                   <Sparkles className="w-3 h-3 text-[#FF2638]" />
                   Vision AI Engine
                 </span>
-                <span className={`w-2 h-2 rounded-full ${hasGeminiKey ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-[#FF2638] animate-pulse shadow-[0_0_8px_#FF2638]'}`} />
+                <span className={`w-2 h-2 rounded-full ${hasVisionKey ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-[#FF2638] animate-pulse shadow-[0_0_8px_#FF2638]'}`} />
               </div>
               <div className="text-xs font-bold text-slate-800 dark:text-[#F5F5F7] truncate">
-                {hasGeminiKey ? 'Gemini 2.5 Flash' : 'Dynamic Vision AI'}
+                {hasVisionKey ? 'RuleVision Neural Engine' : 'RuleVision Vision AI'}
               </div>
               <div className="text-[10px] text-slate-500 dark:text-[#A5A7B0] mt-0.5 flex items-center justify-between">
-                <span>{hasGeminiKey ? 'Real-time Multimodal' : 'Perceptual Intelligence'}</span>
+                <span>{hasVisionKey ? 'High-Precision Vision AI' : 'Perceptual Intelligence'}</span>
                 <span className="text-slate-400 group-hover:text-slate-700 dark:group-hover:text-[#FF2638] text-[10px] font-semibold underline">
-                  Setup
+                  Configure
                 </span>
               </div>
             </button>
@@ -255,7 +259,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               title="Vision AI Configuration"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[10px] font-bold">{hasGeminiKey ? 'AI Online' : 'AI Setup'}</span>
+              <span className="text-[10px] font-bold">{hasVisionKey ? 'Vision Engine Active' : 'Vision Engine Setup'}</span>
             </button>
             {onToggleTheme && (
               <button
@@ -372,7 +376,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">Vision AI Engine Setup</h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Google Gemini Multimodal Vision AI</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">RuleVision Multimodal Vision AI Engine</p>
                 </div>
               </div>
               <button
@@ -385,19 +389,19 @@ export const AppShell: React.FC<AppShellProps> = ({
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              When a <strong>Google Gemini API Key</strong> is configured, RuleVision scans <strong>any uploaded or captured product photo in real-time</strong> and reads the actual printed declarations (MRP, Net Qty, Dates, FSSAI).
+              When a <strong>Vision AI API Key</strong> is configured, RuleVision scans <strong>any uploaded or captured product photo in real-time</strong> and reads the actual printed declarations (MRP, Net Qty, Dates, FSSAI).
             </p>
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <Key className="w-3.5 h-3.5" />
-                Gemini API Key (Optional):
+                Vision AI API Key (Optional):
               </label>
               <input
                 type="password"
                 value={apiKeyInput}
                 onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="AIzaSy..."
+                placeholder="Enter Vision AI API Key..."
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:outline-none"
               />
               <p className="text-[11px] text-slate-400">
@@ -413,11 +417,12 @@ export const AppShell: React.FC<AppShellProps> = ({
             )}
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              {hasGeminiKey && (
+              {hasVisionKey && (
                 <button
                   type="button"
                   onClick={() => {
                     setApiKeyInput('');
+                    localStorage.removeItem('rulevision_vision_api_key');
                     localStorage.removeItem('rulevision_gemini_api_key');
                   }}
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"

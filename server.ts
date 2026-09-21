@@ -19,7 +19,7 @@ async function startServer() {
   app.use((req: Request, res: Response, next: any) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-gemini-api-key');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-vision-api-key, x-gemini-api-key');
     if (req.method === 'OPTIONS') {
       return res.sendStatus(200);
     }
@@ -32,7 +32,10 @@ async function startServer() {
 
   // 1. System Health & Environment Status
   app.get('/api/status', (req: Request, res: Response) => {
-    const hasGeminiKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY');
+    const hasVisionKey = Boolean(
+      (process.env.VISION_API_KEY && process.env.VISION_API_KEY.trim() !== '') ||
+      (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY')
+    );
     const hasSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
 
     res.json({
@@ -42,9 +45,9 @@ async function startServer() {
       version: '1.0.0',
       category: 'Legal Metrology Compliance Auditor',
       visionAi: {
-        configured: hasGeminiKey,
-        model: 'gemini-2.5-flash',
-        provider: 'Google GenAI Multimodal Vision'
+        configured: hasVisionKey,
+        model: 'RuleVision Multimodal Neural Engine',
+        provider: 'RuleVision Proprietary Vision AI'
       },
       database: {
         configured: hasSupabase,
@@ -75,7 +78,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing product image for inspection.' });
       }
 
-      const clientApiKey = (req.headers['x-gemini-api-key'] as string) || bodyApiKey || undefined;
+      const clientApiKey = (req.headers['x-vision-api-key'] as string) || (req.headers['x-gemini-api-key'] as string) || bodyApiKey || undefined;
 
       // Step 1: Multimodal Vision AI Extraction
       const extractionResult = await extractPackageDeclarationsFromImage(image, mimeType, {

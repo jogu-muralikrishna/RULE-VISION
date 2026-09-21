@@ -175,10 +175,10 @@ function parseSvgDeclarations(svg: string): ExtractedPackageData {
 }
 
 /**
- * Direct browser-to-Gemini REST API caller:
+ * Direct browser-to-Vision AI REST API caller:
  * Enables full Vision AI analysis even on Live Server / static environments when API key is provided.
  */
-async function callGeminiDirectClient(
+async function callVisionAiDirectClient(
   apiKey: string,
   base64Data: string,
   mimeType: string,
@@ -244,7 +244,7 @@ Return strictly a JSON object conforming to this structure:
       }
     }
   } catch (e) {
-    console.warn('[RuleVision] Client-side Gemini call notice:', e);
+    console.warn('[RuleVision] Client-side Vision AI call notice:', e);
   }
   return null;
 }
@@ -263,10 +263,12 @@ async function runClientSideInspection(options: AnalyzeProductOptions): Promise<
 
   let extracted: ExtractedPackageData | null = null;
 
-  // 1. Check if user configured Gemini API key in localStorage or options
-  const apiKey = options.apiKey || (typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_gemini_api_key') : null);
+  // 1. Check if user configured Vision AI API key in localStorage or options
+  const apiKey = options.apiKey || (typeof localStorage !== 'undefined'
+    ? localStorage.getItem('rulevision_vision_api_key') || localStorage.getItem('rulevision_gemini_api_key')
+    : null);
   if (apiKey && !isSvg) {
-    extracted = await callGeminiDirectClient(apiKey, content, options.mimeType || 'image/jpeg', options.productName);
+    extracted = await callVisionAiDirectClient(apiKey, content, options.mimeType || 'image/jpeg', options.productName);
   }
 
   if (!extracted) {
@@ -290,7 +292,7 @@ async function runClientSideInspection(options: AnalyzeProductOptions): Promise<
       try {
         let angleExtracted: ExtractedPackageData | null = null;
         if (apiKey) {
-          angleExtracted = await callGeminiDirectClient(apiKey, angle.dataUrl, 'image/jpeg', options.productName);
+          angleExtracted = await callVisionAiDirectClient(apiKey, angle.dataUrl, 'image/jpeg', options.productName);
         }
         if (!angleExtracted) {
           angleExtracted = await scanLabelInBrowser(angle.dataUrl, options.productName);
@@ -367,7 +369,9 @@ async function runClientSideInspection(options: AnalyzeProductOptions): Promise<
  * if running on Live Server (405 Method Not Allowed) or offline.
  */
 export async function analyzeProductImage(options: AnalyzeProductOptions): Promise<InspectionRecord> {
-  const activeKey = options.apiKey || (typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_gemini_api_key') : null) || undefined;
+  const activeKey = options.apiKey || (typeof localStorage !== 'undefined'
+    ? localStorage.getItem('rulevision_vision_api_key') || localStorage.getItem('rulevision_gemini_api_key')
+    : null) || undefined;
 
   const payload = JSON.stringify({
     image: options.image,
@@ -395,6 +399,7 @@ export async function analyzeProductImage(options: AnalyzeProductOptions): Promi
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (activeKey) {
+        headers['x-vision-api-key'] = activeKey;
         headers['x-gemini-api-key'] = activeKey;
       }
 
