@@ -653,6 +653,145 @@ export const authService = {
   },
 
   /**
+   * Send 6-digit OTP to registered inspector email via Supabase Auth
+   */
+  async sendInspectorOtp(email: string): Promise<{ success: boolean; error?: string; message?: string }> {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      return { success: false, error: 'Please enter your registered official email address.' };
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid email address format.' };
+    }
+
+    const supabase = (dbService as any).getSupabaseClient?.() || null;
+
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.auth.signInWithOtp({
+          email: cleanEmail,
+          options: {
+            shouldCreateUser: false
+          }
+        });
+
+        if (error) {
+          // If error is about user not found or signups not allowed
+          if (
+            error.message.toLowerCase().includes('signups not allowed') ||
+            error.message.toLowerCase().includes('user not found') ||
+            error.message.toLowerCase().includes('not found')
+          ) {
+            return {
+              success: false,
+              error: 'This email is not registered as an Inspector. Please create an account or verify your email.'
+            };
+          }
+          if (error.message.toLowerCase().includes('rate') || error.message.toLowerCase().includes('too many')) {
+            return {
+              success: false,
+              error: 'Too many OTP requests. Please wait 60 seconds before requesting a new code.'
+            };
+          }
+          return { success: false, error: error.message };
+        }
+
+        return {
+          success: true,
+          message: `Verification code sent to ${cleanEmail}. Please check your inbox.`
+        };
+      } catch (err: any) {
+        console.error('Supabase signInWithOtp error:', err);
+        return {
+          success: false,
+          error: err?.message || 'Unable to connect to authentication server.'
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Supabase authentication service is not connected. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.'
+    };
+  },
+
+  /**
+   * Verify 6-digit OTP through Supabase Auth and evaluate inspector authorization
+   */
+  async verifyInspectorOtp(
+    email: string,
+    token: string
+  ): Promise<AuthResponse & { route?: 'inspector' | 'pending' | 'rejected' | 'consumer' | 'admin' }> {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanToken = token.trim();
+
+    if (!cleanEmail || !cleanToken) {
+      return { success: false, error: 'Email and 6-digit verification code are required.' };
+    }
+
+    if (cleanToken.length !== 6 || !/^\d{6}$/.test(cleanToken)) {
+      return { success: false, error: 'Please enter a complete 6-digit numeric verification code.' };
+    }
+
+    const supabase = (dbService as any).getSupabaseClient?.() || null;
+
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          email: cleanEmail,
+          token: cleanToken,
+          type: 'email'
+        });
+
+        if (error) {
+          if (error.message.toLowerCase().includes('expired')) {
+            return { success: false, error: 'The verification code has expired. Please request a new code.' };
+          }
+          return { success: false, error: 'Invalid verification code. Please check your email and enter the correct 6 digits.' };
+        }
+
+        if (data?.user) {
+          // Fetch verified user profile from Supabase profiles table
+          const profile = await this.fetchUserProfile(data.user.id, data.user.email || cleanEmail);
+          this.setLocalSession(profile);
+
+          let route: 'inspector' | 'pending' | 'rejected' | 'consumer' | 'admin' = 'consumer';
+
+          if (profile.role === 'admin') {
+            route = 'admin';
+          } else if (profile.role === 'inspector' && profile.inspector_status === 'approved') {
+            route = 'inspector';
+          } else if (profile.inspector_status === 'pending') {
+            route = 'pending';
+          } else if (profile.inspector_status === 'rejected') {
+            route = 'rejected';
+          } else {
+            route = 'consumer';
+          }
+
+          return {
+            success: true,
+            user: profile,
+            route
+          };
+        }
+
+        return { success: false, error: 'Failed to retrieve authenticated user session.' };
+      } catch (err: any) {
+        console.error('Supabase verifyOtp error:', err);
+        return { success: false, error: err?.message || 'Failed to verify OTP code.' };
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Supabase authentication service is not connected. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'
+    };
+  },
+
+  /**
    * Password reset request
    */
   async resetPassword(email: string): Promise<{ success: boolean; message: string }> {

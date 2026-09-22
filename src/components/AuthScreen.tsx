@@ -26,6 +26,7 @@ import {
 import { authService } from '../services/authService';
 import { UserProfile, UserRole } from '../types';
 import { BrandLogo } from './BrandLogo';
+import { InspectorOtpLogin } from './InspectorOtpLogin';
 
 interface AuthScreenProps {
   onLoginSuccess: (user: UserProfile) => void;
@@ -33,7 +34,7 @@ interface AuthScreenProps {
   onToggleTheme: () => void;
 }
 
-type AuthMode = 'login' | 'signup' | 'forgot_password';
+type AuthMode = 'login' | 'signup' | 'forgot_password' | 'inspector_otp';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -183,6 +184,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       setLoading(false);
     }
   };
+
+  if (authMode === 'inspector_otp') {
+    return (
+      <InspectorOtpLogin
+        onLoginSuccess={onLoginSuccess}
+        onBackToMainLogin={() => setAuthMode('login')}
+        isDarkMode={isDarkMode}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#08090C] text-[#F5F5F7] flex flex-col justify-between transition-colors duration-200 selection:bg-[#FF2638] selection:text-white">
@@ -436,6 +447,30 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   >
                     {loading ? 'Authenticating...' : 'Sign In to Workspace'}
                     <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  {/* Inspector Portal Login Divider & Button */}
+                  <div className="relative flex items-center justify-center pt-2">
+                    <div className="border-t border-[#292B34] w-full" />
+                    <span className="bg-[#14151B] px-3 text-[10px] font-bold text-[#71737E] uppercase tracking-wider whitespace-nowrap">
+                      Authorized Enforcement
+                    </span>
+                    <div className="border-t border-[#292B34] w-full" />
+                  </div>
+
+                  <button
+                    type="button"
+                    id="btn-inspector-otp-login"
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setSuccessMessage(null);
+                      setAuthMode('inspector_otp');
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer group shadow-xs"
+                  >
+                    <Shield className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                    <span>Legal Metrology Inspector Login (Email OTP)</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
                   </button>
 
                   <div className="pt-2 text-center">
