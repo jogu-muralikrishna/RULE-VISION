@@ -6,10 +6,14 @@ const LOCAL_STORAGE_KEY = 'rulevision_inspections_v1';
 
 let supabaseClient: SupabaseClient | null = null;
 const metaEnv = (import.meta as any).env || {};
-const supabaseUrl = metaEnv.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = metaEnv.VITE_SUPABASE_ANON_KEY || '';
+const procEnv = typeof process !== 'undefined' ? (process as any).env || {} : {};
+const localUrl = typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_supabase_url') || '' : '';
+const localKey = typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_supabase_anon_key') || '' : '';
 
-if (supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('https://')) {
+const supabaseUrl = metaEnv.VITE_SUPABASE_URL || metaEnv.SUPABASE_URL || procEnv.VITE_SUPABASE_URL || procEnv.SUPABASE_URL || localUrl;
+const supabaseAnonKey = metaEnv.VITE_SUPABASE_ANON_KEY || metaEnv.SUPABASE_ANON_KEY || procEnv.VITE_SUPABASE_ANON_KEY || procEnv.SUPABASE_ANON_KEY || localKey;
+
+if (supabaseUrl && supabaseAnonKey && (supabaseUrl.startsWith('https://') || supabaseUrl.startsWith('http://'))) {
   try {
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
   } catch (err) {

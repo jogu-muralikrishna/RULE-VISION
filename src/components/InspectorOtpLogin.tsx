@@ -14,10 +14,15 @@ import {
   ShieldCheck,
   Check,
   ChevronLeft,
-  Smartphone
+  Smartphone,
+  Database,
+  Settings,
+  X,
+  ExternalLink
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import { authService } from '../services/authService';
+import { dbService } from '../services/db';
 import { UserProfile } from '../types';
 
 interface InspectorOtpLoginProps {
@@ -55,6 +60,17 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
   // Resend countdown timer (60 seconds)
   const [countdown, setCountdown] = useState<number>(0);
 
+  // Supabase cloud status & config modal
+  const [isCloudConnected, setIsCloudConnected] = useState<boolean>(dbService.isSupabaseConfigured());
+  const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
+  const [cfgUrl, setCfgUrl] = useState<string>(() => {
+    return (typeof localStorage !== 'undefined' && localStorage.getItem('rulevision_supabase_url')) || '';
+  });
+  const [cfgKey, setCfgKey] = useState<string>(() => {
+    return (typeof localStorage !== 'undefined' && localStorage.getItem('rulevision_supabase_anon_key')) || '';
+  });
+  const [configSuccess, setConfigSuccess] = useState<string | null>(null);
+
   // Slingshot animation states
   const [slingshotStatus, setSlingshotStatus] = useState<'idle' | 'charging' | 'launching' | 'verified' | 'failed'>('idle');
   const [manualPull, setManualPull] = useState<number>(0);
@@ -63,6 +79,44 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
 
   // Input refs for the 6 boxes
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleSaveConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanUrl = cfgUrl.trim();
+    const cleanKey = cfgKey.trim();
+
+    if (cleanUrl) {
+      localStorage.setItem('rulevision_supabase_url', cleanUrl);
+    } else {
+      localStorage.removeItem('rulevision_supabase_url');
+    }
+
+    if (cleanKey) {
+      localStorage.setItem('rulevision_supabase_anon_key', cleanKey);
+    } else {
+      localStorage.removeItem('rulevision_supabase_anon_key');
+    }
+
+    setConfigSuccess('Configuration saved! Reloading application to connect Supabase...');
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
+  };
+
+  const handleClearConfig = () => {
+    localStorage.removeItem('rulevision_supabase_url');
+    localStorage.removeItem('rulevision_supabase_anon_key');
+    setConfigSuccess('Cloud configuration cleared. Reverting to local development mode...');
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
+  };
+
+  const handleQuickFillDevOtp = () => {
+    const devCode = ['1', '2', '3', '4', '5', '6'];
+    setOtp(devCode);
+    handleVerifyOtp('123456');
+  };
 
   // Timer countdown handler
   useEffect(() => {
@@ -347,14 +401,43 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
           subtitle="Official Legal Metrology Enforcement Portal"
         />
 
-        <button
-          type="button"
-          onClick={onBackToMainLogin}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#292B34] bg-[#14151B] text-[#A5A7B0] hover:text-white hover:border-[#FF2638]/50 transition-colors text-xs font-semibold cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Main Login</span>
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {isCloudConnected ? (
+            <button
+              type="button"
+              onClick={() => setShowConfigModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-xs font-semibold cursor-pointer transition-colors"
+              title="Click to view or edit Supabase configuration"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span className="hidden sm:inline">Supabase Cloud Connected</span>
+              <span className="sm:hidden">Connected</span>
+              <Settings className="w-3 h-3 text-emerald-400" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowConfigModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 text-xs font-semibold cursor-pointer transition-colors"
+              title="Click to connect Supabase Cloud"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span className="hidden sm:inline">Dev Mode (OTP: 123456)</span>
+              <span className="sm:hidden">Dev Mode</span>
+              <span className="text-[11px] underline ml-1 font-bold">Connect Cloud ⚙️</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onBackToMainLogin}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#292B34] bg-[#14151B] text-[#A5A7B0] hover:text-white hover:border-[#FF2638]/50 transition-colors text-xs font-semibold cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Back to Main Login</span>
+            <span className="sm:hidden">Back</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -381,6 +464,28 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
                 Enter your registered email address. We will send you a secure verification code to continue.
               </p>
             </div>
+
+            {/* Dev Mode Banner if Supabase is not connected */}
+            {!isCloudConnected && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+                <Sparkles className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <div className="font-semibold flex items-center justify-between">
+                    <span>⚡ Local Development / Demo Mode</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowConfigModal(true)}
+                      className="underline text-amber-400 hover:text-white cursor-pointer font-bold"
+                    >
+                      Connect Cloud
+                    </button>
+                  </div>
+                  <p className="text-[#C8CAD4] text-[11px] leading-relaxed">
+                    Supabase credentials are not connected yet. You can test with any email — your verification OTP code will be <strong className="text-white font-mono bg-amber-500/20 px-1 py-0.5 rounded">123456</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Feedback Banners */}
             {errorMessage && (
@@ -613,6 +718,23 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
                   </p>
                 </div>
 
+                {/* Dev Mode OTP Indicator & Quick Fill */}
+                {!isCloudConnected && (
+                  <div className="flex items-center justify-between p-2.5 px-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      <span>Dev Code: <strong className="text-white font-mono">123456</strong></span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleQuickFillDevOtp}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-bold cursor-pointer transition-colors border border-amber-500/30"
+                    >
+                      ⚡ Auto-fill & Verify
+                    </button>
+                  </div>
+                )}
+
                 {/* Feedback Toast */}
                 {errorMessage && (
                   <div className="flex items-start gap-2.5 p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-300 text-xs animate-shake">
@@ -757,10 +879,116 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
           <span>•</span>
           <span>Legal Metrology Inspector OTP Authentication</span>
         </div>
-        <div className="text-[11px] text-[#71737E]">
-          Protected by Supabase Auth & Multi-Factor Verification
+        <div className="flex items-center gap-3 text-[11px] text-[#71737E]">
+          <span>Protected by Multi-Factor Verification</span>
+          <span>•</span>
+          <button
+            type="button"
+            onClick={() => setShowConfigModal(true)}
+            className="text-amber-400 hover:text-white underline cursor-pointer"
+          >
+            Supabase Settings
+          </button>
         </div>
       </footer>
+
+      {/* ====================================================
+         SUPABASE CLOUD CONFIGURATION MODAL
+         ==================================================== */}
+      {showConfigModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-lg bg-[#14151B] rounded-2xl border border-[#292B34] shadow-2xl p-6 sm:p-7 space-y-5 relative">
+            <div className="flex items-center justify-between border-b border-[#292B34] pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Supabase Cloud Connection</h3>
+                  <p className="text-xs text-[#A5A7B0]">Configure live Supabase authentication & database</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfigModal(false);
+                  setConfigSuccess(null);
+                }}
+                className="p-1.5 rounded-lg text-[#A5A7B0] hover:text-white hover:bg-[#1F2128] transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {configSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-700/60 text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                <span>{configSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveConfig} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#F5F5F7] flex items-center justify-between">
+                  <span>Supabase Project URL (<code className="text-amber-400 font-mono">VITE_SUPABASE_URL</code>)</span>
+                  {cfgUrl && <span className="text-[10px] text-emerald-400 font-normal">Configured</span>}
+                </label>
+                <input
+                  type="url"
+                  value={cfgUrl}
+                  onChange={(e) => setCfgUrl(e.target.value)}
+                  placeholder="https://xyzcompany.supabase.co"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-xs font-mono focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#F5F5F7] flex items-center justify-between">
+                  <span>Supabase Anon Public Key (<code className="text-amber-400 font-mono">VITE_SUPABASE_ANON_KEY</code>)</span>
+                  {cfgKey && <span className="text-[10px] text-emerald-400 font-normal">Configured</span>}
+                </label>
+                <input
+                  type="text"
+                  value={cfgKey}
+                  onChange={(e) => setCfgKey(e.target.value)}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-xs font-mono focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-[#101116] border border-[#20222B] text-xs text-[#A5A7B0] space-y-2">
+                <div className="font-semibold text-white flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Where do I get these credentials?</span>
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  In your Supabase Dashboard (<a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline inline-flex items-center gap-0.5">supabase.com <ExternalLink className="w-2.5 h-2.5" /></a>), navigate to <strong>Project Settings → API</strong>. Copy the <strong>Project URL</strong> and the public <strong>anon key</strong>.
+                </p>
+                <p className="text-[11px] leading-relaxed text-[#71737E]">
+                  You can also paste them directly into <code className="text-amber-300 font-mono">.env</code> in your project root as <code className="text-white font-mono">VITE_SUPABASE_URL</code> and <code className="text-white font-mono">VITE_SUPABASE_ANON_KEY</code>.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 gap-3">
+                <button
+                  type="button"
+                  onClick={handleClearConfig}
+                  className="px-3 py-2 rounded-xl border border-[#292B34] text-xs text-[#A5A7B0] hover:text-red-400 hover:border-red-500/30 transition-colors cursor-pointer"
+                >
+                  Clear / Dev Mode
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2638] via-[#FF3B4D] to-amber-500 text-white font-bold text-xs shadow-md shadow-[#FF2638]/20 hover:opacity-95 transition-all cursor-pointer"
+                >
+                  Save & Connect Supabase
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
