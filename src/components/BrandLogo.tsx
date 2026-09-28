@@ -1,5 +1,5 @@
 import React from 'react';
-import rulevisionLogo from '../assets/rulevision_logo.png';
+import rulevisionShield from '../assets/rulevision_shield.png';
 
 interface BrandLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'hero';
@@ -47,38 +47,39 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     },
     lg: {
       container: 'gap-3.5',
-      box: 'w-12 h-12 sm:w-14 sm:h-14 rounded-xl',
-      img: 'w-12 h-12 sm:w-14 sm:h-14',
-      title: 'text-lg sm:text-xl font-bold',
+      box: 'w-14 h-14 sm:w-16 sm:h-16 rounded-2xl',
+      img: 'w-14 h-14 sm:w-16 sm:h-16',
+      title: 'text-xl sm:text-2xl font-bold',
       badgeText: 'text-xs px-2.5 py-0.5',
       subText: 'text-xs'
     },
     hero: {
       container: 'gap-4',
-      box: 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl',
-      img: 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24',
-      title: 'text-2xl sm:text-3xl md:text-4xl font-extrabold',
+      box: 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl shadow-lg ring-1 ring-slate-700/50',
+      img: 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28',
+      title: 'text-3xl sm:text-4xl md:text-5xl font-extrabold',
       badgeText: 'text-xs px-2.5 py-1',
       subText: 'text-xs sm:text-sm'
     }
   };
 
   const config = sizeMap[size] || sizeMap.md;
+  const isCol = className.includes('flex-col');
 
   return (
     <div
       className={`inline-flex items-center ${config.container} select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
-      {/* Official RuleVision Shield Emblem (Exact Asset, strictly 1:1 aspect ratio, perfectly framed) */}
+      {/* Official RuleVision Shield Emblem (High-Clarity Native Asset) */}
       <div className="relative shrink-0 flex items-center justify-center">
         <div
-          className={`${config.box} overflow-hidden bg-[#070b14] border border-slate-700/80 shadow-xs flex items-center justify-center aspect-square transition-transform duration-200 hover:scale-105`}
+          className={`${config.box} overflow-hidden bg-[#070b14] border border-slate-700/80 shadow-md flex items-center justify-center aspect-square transition-transform duration-200 hover:scale-105 shrink-0`}
         >
           <img
-            src={rulevisionLogo}
+            src={rulevisionShield}
             alt="RuleVision Logo"
-            className={`${config.img} aspect-square object-contain block`}
+            className={`${config.img} aspect-square object-cover block`}
             loading="eager"
           />
         </div>
@@ -86,7 +87,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
       {/* Brand Title & Descriptor */}
       {!onlyEmblem && (
-        <div className="flex flex-col text-left justify-center">
+        <div className={`flex flex-col justify-center ${isCol ? 'items-center text-center' : 'text-left'}`}>
           <div className="flex items-center gap-1.5 leading-tight">
             <span className={`font-headline tracking-tight text-[#0d1c2e] dark:text-white ${config.title}`}>
               RuleVision
