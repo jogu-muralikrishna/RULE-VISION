@@ -196,3 +196,15 @@ export interface BatchItem {
   inspection?: InspectionRecord;
   error?: string;
 }
+
+export interface AdminAuditLog {
+  id: string;
+  action: 'INSPECTOR_APPROVED' | 'INSPECTOR_REJECTED' | 'INSPECTOR_REVOKED' | 'USER_ROLE_CHANGED' | 'USER_DELETED' | 'INSPECTION_DELETED' | 'INSPECTION_RESTORED' | 'ADMIN_LOGIN' | 'SYSTEM_CONFIG_UPDATED';
+  admin_id: string;
+  admin_email: string;
+  target_id: string;
+  target_type: 'user' | 'inspector' | 'inspection' | 'system' | 'auth';
+  details?: Record<string, any>;
+  created_at: string;
+}
+

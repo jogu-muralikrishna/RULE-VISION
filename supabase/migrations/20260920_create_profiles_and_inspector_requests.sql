@@ -124,7 +124,7 @@ DECLARE
 BEGIN
   -- Verify caller is an admin
   SELECT role INTO caller_role FROM profiles WHERE id = auth.uid();
-  IF caller_role != 'admin' AND auth.jwt() ->> 'email' != 'admin@rulevision.gov.in' THEN
+  IF caller_role != 'admin' AND (auth.jwt() ->> 'email') NOT IN ('admin@iare.com', 'admin@rulevision.gov.in') THEN
     RAISE EXCEPTION 'Access Denied: Only administrators can verify inspector requests.';
   END IF;
 

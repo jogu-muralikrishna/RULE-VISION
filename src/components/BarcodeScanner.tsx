@@ -85,45 +85,45 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanResult, on
   }, []);
 
   return (
-    <div className="max-w-xl mx-auto py-4 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="max-w-xl mx-auto py-3 space-y-3 font-sans">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-slate-900 dark:text-white" />
-            Scan Barcode / QR Code
+          <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2 font-display">
+            <QrCode className="w-4 h-4 text-slate-800" />
+            Barcode / QR Code Optical Sensor
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Align barcode (EAN-13, UPC, QR) within the scanning frame.
+          <p className="text-xs text-slate-500 font-mono">
+            Rule 6(1) Packaging Optical Scanner
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+          className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-colors shadow-xs"
         >
           Cancel
         </button>
       </div>
 
       {error ? (
-        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl p-5 text-center space-y-3">
-          <X className="w-8 h-8 text-red-500 mx-auto" />
-          <p className="text-sm font-semibold text-red-900 dark:text-red-200">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center space-y-3">
+          <X className="w-8 h-8 text-red-600 mx-auto" />
+          <p className="text-sm font-semibold text-red-900">{error}</p>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 text-xs font-bold"
+            className="px-4 py-1.5 rounded-md bg-white border border-red-200 text-red-800 text-xs font-bold shadow-xs cursor-pointer"
           >
             Go Back
           </button>
         </div>
       ) : (
-        <div className="relative rounded-2xl overflow-hidden bg-black shadow-md border border-slate-800">
+        <div className="relative rounded-xl overflow-hidden bg-slate-950 shadow-sm border border-slate-300">
           {isStarting && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/80">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/85">
               <div className="text-center space-y-2">
-                <div className="w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
-                <p className="text-xs text-white/70 font-semibold">Starting barcode scanner...</p>
+                <div className="w-7 h-7 border-2 border-slate-400 border-t-white rounded-full animate-spin mx-auto"></div>
+                <p className="text-xs text-slate-300 font-mono">INITIALIZING OPTICAL SENSOR...</p>
               </div>
             </div>
           )}
@@ -132,17 +132,17 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanResult, on
 
           {!isStarting && (
             <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-              <div className="bg-black/70 backdrop-blur-sm text-white text-[11px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <div className="bg-slate-900/80 backdrop-blur-xs text-white text-[11px] font-mono font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 border border-slate-700">
                 <ScanLine className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                Scanning for barcodes...
+                <span>ALIGN BARCODE IN SENSOR RETICLE</span>
               </div>
             </div>
           )}
         </div>
       )}
 
-      <div className="text-center text-[11px] text-slate-500 dark:text-slate-400">
-        Supported formats: EAN-13, EAN-8, UPC-A, UPC-E, QR Code, Code-128, Code-39, ITF, Codabar
+      <div className="text-center text-[10px] text-slate-400 font-mono">
+        STANDARDS: EAN-13 • EAN-8 • UPC-A • UPC-E • QR CODE • CODE-128
       </div>
     </div>
   );

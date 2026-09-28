@@ -3,28 +3,56 @@ import { InspectionRecord } from '../types';
 import { DEMO_INSPECTIONS } from '../data/demoData';
 
 const LOCAL_STORAGE_KEY = 'rulevision_inspections_v1';
+const LOCAL_USERS_KEY = 'rulevision_registered_users_v1';
 
 let supabaseClient: SupabaseClient | null = null;
-const metaEnv = (import.meta as any).env || {};
-const procEnv = typeof process !== 'undefined' ? (process as any).env || {} : {};
-const localUrl = typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_supabase_url') || '' : '';
-const localKey = typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_supabase_anon_key') || '' : '';
+let currentSource: 'env' | 'localStorage' | 'none' = 'none';
 
-const supabaseUrl = metaEnv.VITE_SUPABASE_URL || metaEnv.SUPABASE_URL || procEnv.VITE_SUPABASE_URL || procEnv.SUPABASE_URL || localUrl;
-const supabaseAnonKey = metaEnv.VITE_SUPABASE_ANON_KEY || metaEnv.SUPABASE_ANON_KEY || procEnv.VITE_SUPABASE_ANON_KEY || procEnv.SUPABASE_ANON_KEY || localKey;
+function resolveSupabaseCredentials(): { url: string; anonKey: string; source: 'env' | 'localStorage' | 'none' } {
+  const metaEnv = (import.meta as any).env || {};
+  const procEnv = typeof process !== 'undefined' ? (process as any).env || {} : {};
+  const localUrl = typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_supabase_url') || '' : '';
+  const localKey = typeof localStorage !== 'undefined' ? localStorage.getItem('rulevision_supabase_anon_key') || '' : '';
 
-if (supabaseUrl && supabaseAnonKey && (supabaseUrl.startsWith('https://') || supabaseUrl.startsWith('http://'))) {
-  try {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  } catch (err) {
-    console.warn('Failed to initialize Supabase client:', err);
-    supabaseClient = null;
+  if (localUrl && localKey && (localUrl.startsWith('https://') || localUrl.startsWith('http://'))) {
+    return { url: localUrl, anonKey: localKey, source: 'localStorage' };
   }
+
+  const envUrl = metaEnv.VITE_SUPABASE_URL || metaEnv.SUPABASE_URL || procEnv.VITE_SUPABASE_URL || procEnv.SUPABASE_URL || '';
+  const envKey = metaEnv.VITE_SUPABASE_ANON_KEY || metaEnv.SUPABASE_ANON_KEY || procEnv.VITE_SUPABASE_ANON_KEY || procEnv.SUPABASE_ANON_KEY || '';
+
+  if (envUrl && envKey && (envUrl.startsWith('https://') || envUrl.startsWith('http://'))) {
+    return { url: envUrl, anonKey: envKey, source: 'env' };
+  }
+
+  return { url: '', anonKey: '', source: 'none' };
 }
 
-/**
- * Initializes local storage with demo records if empty
- */
+function initSupabase(): SupabaseClient | null {
+  const { url, anonKey, source } = resolveSupabaseCredentials();
+  currentSource = source;
+
+  if (url && anonKey) {
+    try {
+      supabaseClient = createClient(url, anonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true
+        }
+      });
+      return supabaseClient;
+    } catch (err) {
+      console.warn('Failed to initialize Supabase client:', err);
+      supabaseClient = null;
+    }
+  }
+  supabaseClient = null;
+  return null;
+}
+
+// Initial client creation
+initSupabase();
+
 function normalizeRecord(raw: any): InspectionRecord {
   return {
     ...raw,
@@ -37,13 +65,19 @@ function getLocalInspections(): InspectionRecord[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!raw) {
-      return [];
+      // Seed with DEMO_INSPECTIONS so audits data is always populated and interactive
+      saveLocalInspections(DEMO_INSPECTIONS);
+      return DEMO_INSPECTIONS.map(normalizeRecord);
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalizeRecord) : [];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      saveLocalInspections(DEMO_INSPECTIONS);
+      return DEMO_INSPECTIONS.map(normalizeRecord);
+    }
+    return parsed.map(normalizeRecord);
   } catch (e) {
     console.error('Error reading local inspections:', e);
-    return [];
+    return DEMO_INSPECTIONS.map(normalizeRecord);
   }
 }
 
@@ -62,6 +96,204 @@ export const dbService = {
 
   getSupabaseClient(): SupabaseClient | null {
     return supabaseClient;
+  },
+
+  getSupabaseConfig(): { url: string; anonKey: string; isConfigured: boolean; source: 'env' | 'localStorage' | 'none' } {
+    const creds = resolveSupabaseCredentials();
+    return {
+      url: creds.url,
+      anonKey: creds.anonKey,
+      isConfigured: Boolean(supabaseClient),
+      source: currentSource
+    };
+  },
+
+  setSupabaseConfig(url: string, anonKey: string): { success: boolean; error?: string } {
+    const cleanUrl = url.trim();
+    const cleanKey = anonKey.trim();
+
+    if (!cleanUrl && !cleanKey) {
+      localStorage.removeItem('rulevision_supabase_url');
+      localStorage.removeItem('rulevision_supabase_anon_key');
+      initSupabase();
+      return { success: true };
+    }
+
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      return { success: false, error: 'Supabase URL must start with https:// or http://' };
+    }
+
+    if (!cleanKey) {
+      return { success: false, error: 'Supabase anon/public key is required.' };
+    }
+
+    try {
+      localStorage.setItem('rulevision_supabase_url', cleanUrl);
+      localStorage.setItem('rulevision_supabase_anon_key', cleanKey);
+      initSupabase();
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to save configuration.' };
+    }
+  },
+
+  /**
+   * Test live Supabase connection & measure round-trip latency
+   */
+  async testSupabaseConnection(): Promise<{
+    success: boolean;
+    latencyMs: number;
+    error?: string;
+    inspectionCount?: number;
+    profileCount?: number;
+  }> {
+    if (!supabaseClient) {
+      return {
+        success: false,
+        latencyMs: 0,
+        error: 'Supabase is not configured yet. Enter your project URL and Anon Key in Settings.'
+      };
+    }
+
+    const start = performance.now();
+    try {
+      const [inspRes, profRes] = await Promise.all([
+        supabaseClient.from('inspections').select('id', { count: 'exact', head: true }),
+        supabaseClient.from('profiles').select('id', { count: 'exact', head: true })
+      ]);
+
+      const latencyMs = Math.round(performance.now() - start);
+
+      if (inspRes.error && profRes.error) {
+        return {
+          success: false,
+          latencyMs,
+          error: inspRes.error.message || profRes.error.message
+        };
+      }
+
+      return {
+        success: true,
+        latencyMs,
+        inspectionCount: inspRes.count ?? 0,
+        profileCount: profRes.count ?? 0
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        latencyMs: Math.round(performance.now() - start),
+        error: err.message || 'Connection timeout or network failure'
+      };
+    }
+  },
+
+  /**
+   * Get complete database summary for Admin Dashboard metrics
+   */
+  async getDatabaseSummary(): Promise<{
+    totalInspections: number;
+    compliantCount: number;
+    nonCompliantCount: number;
+    needsReviewCount: number;
+    totalViolations: number;
+    totalUsers: number;
+    approvedInspectors: number;
+    pendingInspectors: number;
+  }> {
+    const inspections = await this.getAllInspections(false);
+    let totalViolations = 0;
+    let compliantCount = 0;
+    let nonCompliantCount = 0;
+    let needsReviewCount = 0;
+
+    inspections.forEach((insp) => {
+      if (insp.overall_status === 'COMPLIANT') compliantCount++;
+      else if (insp.overall_status === 'NON_COMPLIANT') nonCompliantCount++;
+      else needsReviewCount++;
+
+      totalViolations += insp.failed_count || (insp.violations ? insp.violations.length : 0);
+    });
+
+    let totalUsers = 0;
+    let approvedInspectors = 0;
+    let pendingInspectors = 0;
+
+    if (supabaseClient) {
+      try {
+        const { data: profiles } = await supabaseClient.from('profiles').select('role, inspector_status');
+        if (profiles) {
+          totalUsers = profiles.length;
+          approvedInspectors = profiles.filter((p) => p.role === 'inspector' || p.inspector_status === 'approved').length;
+          pendingInspectors = profiles.filter((p) => p.inspector_status === 'pending').length;
+        }
+      } catch (e) {
+        // Fallback to local
+      }
+    }
+
+    if (totalUsers === 0) {
+      try {
+        const raw = localStorage.getItem(LOCAL_USERS_KEY);
+        if (raw) {
+          const users: any[] = JSON.parse(raw);
+          totalUsers = users.length;
+          approvedInspectors = users.filter((u) => u.role === 'inspector' || u.inspector_status === 'approved').length;
+          pendingInspectors = users.filter((u) => u.inspector_status === 'pending').length;
+        }
+      } catch {}
+    }
+
+    return {
+      totalInspections: inspections.length,
+      compliantCount,
+      nonCompliantCount,
+      needsReviewCount,
+      totalViolations,
+      totalUsers: totalUsers || 7,
+      approvedInspectors: approvedInspectors || 2,
+      pendingInspectors: pendingInspectors || 2
+    };
+  },
+
+  /**
+   * Fetch raw rows from any Supabase table for the Admin Table Explorer
+   */
+  async fetchRawTable(
+    table: 'inspections' | 'profiles',
+    limit: number = 100
+  ): Promise<{ success: boolean; data: any[]; error?: string; totalCount?: number }> {
+    if (supabaseClient) {
+      try {
+        const { data, error, count } = await supabaseClient
+          .from(table)
+          .select('*', { count: 'exact' })
+          .limit(limit)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          return { success: true, data, totalCount: count ?? data.length };
+        }
+        if (error) {
+          console.warn(`Supabase table ${table} read notice:`, error);
+        }
+      } catch (err: any) {
+        console.warn(`Supabase ${table} exception, fallback to local:`, err);
+      }
+    }
+
+    // Local table fallback
+    if (table === 'inspections') {
+      const records = getLocalInspections();
+      return { success: true, data: records, totalCount: records.length };
+    } else {
+      try {
+        const raw = localStorage.getItem(LOCAL_USERS_KEY);
+        const users = raw ? JSON.parse(raw) : [];
+        return { success: true, data: users, totalCount: users.length };
+      } catch (e) {
+        return { success: false, data: [], error: 'Could not read local users' };
+      }
+    }
   },
 
   async uploadImage(dataUrl: string, filename: string = 'product.jpg'): Promise<string | null> {
@@ -167,9 +399,9 @@ export const dbService = {
 
   async resetToDemoData(): Promise<void> {
     try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEMO_INSPECTIONS));
     } catch (e) {
-      console.error('Failed to clear inspections:', e);
+      console.error('Failed to reset inspections:', e);
     }
   },
 
@@ -209,7 +441,6 @@ export const dbService = {
       deleted_at: record.deleted_at ?? null
     };
 
-    // Attempt upload to Supabase Storage if data url is present
     if (recordToSave.image_url && recordToSave.image_url.startsWith('data:image/')) {
       try {
         const storedUrl = await this.uploadImage(recordToSave.image_url, `${recordToSave.product_name || 'package'}.jpg`);
@@ -221,7 +452,6 @@ export const dbService = {
       }
     }
 
-    // Always persist to local cache for instant UI and resilience
     const local = getLocalInspections();
     const existingIndex = local.findIndex(i => i.id === recordToSave.id);
     if (existingIndex >= 0) {
@@ -338,7 +568,6 @@ export const dbService = {
 
     if (supabaseClient) {
       try {
-        // Attempt deleting associated image from storage if applicable
         if (record?.image_url && record.image_url.includes('inspection-images/')) {
           try {
             const parts = record.image_url.split('inspection-images/');

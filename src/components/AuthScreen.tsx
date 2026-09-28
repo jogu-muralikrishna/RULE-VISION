@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Lock,
@@ -24,7 +24,7 @@ import {
   Check
 } from 'lucide-react';
 import { authService } from '../services/authService';
-import { UserProfile, UserRole } from '../types';
+import { UserProfile } from '../types';
 import { BrandLogo } from './BrandLogo';
 import { InspectorOtpLogin } from './InspectorOtpLogin';
 
@@ -32,9 +32,11 @@ interface AuthScreenProps {
   onLoginSuccess: (user: UserProfile) => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  initialMode?: AuthMode;
+  onNavigateToAdminLogin?: () => void;
 }
 
-type AuthMode = 'login' | 'signup' | 'forgot_password' | 'inspector_otp';
+export type AuthMode = 'login' | 'signup' | 'forgot_password' | 'inspector_otp';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -50,9 +52,18 @@ const INDIAN_STATES = [
 export const AuthScreen: React.FC<AuthScreenProps> = ({
   onLoginSuccess,
   isDarkMode,
-  onToggleTheme
+  onToggleTheme,
+  initialMode = 'login',
+  onNavigateToAdminLogin
 }) => {
-  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
+
+  useEffect(() => {
+    if (initialMode) {
+      setAuthMode(initialMode);
+    }
+  }, [initialMode]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -196,133 +207,132 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#08090C] text-[#F5F5F7] flex flex-col justify-between transition-colors duration-200 selection:bg-[#FF2638] selection:text-white">
-      {/* Top Navigation Bar */}
-      <header className="px-4 sm:px-8 py-3.5 flex items-center justify-between border-b border-[#292B34] bg-[#101116]/80 backdrop-blur-md sticky top-0 z-40">
-        <BrandLogo
-          size="md"
-          showSubtitle={true}
-          subtitle="AI-Powered Legal Metrology Compliance Inspection"
-        />
+    <div className="min-h-screen bg-[#f8f9ff] text-slate-800 flex flex-col justify-between selection:bg-slate-800 selection:text-white font-sans">
+      {/* Top Official Gazette Strip */}
+      <header className="bg-[#131b2e] text-slate-300 border-b border-slate-700/60 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
+          <BrandLogo
+            size="md"
+            showSubtitle={true}
+            subtitle="AI-Powered Legal Metrology Compliance Inspection"
+          />
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-[#14151B] border border-[#292B34] text-[11px] font-medium text-[#A5A7B0]">
-            <span className="w-2 h-2 rounded-full bg-[#FF2638] animate-pulse" />
-            Legal Metrology (Packaged Commodities) Rules
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700 text-[11px] font-mono font-medium text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>STATUTORY ACT 2009 &amp; PCR 2011</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="p-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className="p-2 rounded-xl border border-[#292B34] bg-[#14151B] text-[#A5A7B0] hover:text-white hover:border-[#FF2638]/50 transition-colors shadow-xs cursor-pointer"
-            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
-          </button>
         </div>
       </header>
 
-      {/* Main Content Area - 2-Column Red Noir Layout */}
+      {/* Main Content Area - 2-Column Statutory Precision Layout */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex items-center">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
-          {/* Left Column: Brand & Feature Showcase */}
-          <div className="hidden lg:flex lg:col-span-7 flex-col space-y-8 pr-4">
+          {/* Left Column: Brand & Statutory Feature Showcase */}
+          <div className="hidden lg:flex lg:col-span-7 flex-col space-y-6 pr-4">
             
             {/* Hero Brand Title */}
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1B1C23] border border-[#292B34] text-xs font-semibold text-[#FF2638]">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Statutory Enforcement & Citizen Protection</span>
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-white border border-slate-200 text-xs font-mono font-semibold text-slate-700 shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-slate-700" />
+                <span>DIRECTORATE OF LEGAL METROLOGY • STATUTORY PLATFORM</span>
               </div>
               
-              <h1 className="text-4xl xl:text-5xl font-black tracking-tight text-white leading-tight">
-                Inspect Packaged Goods with{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF2638] via-[#FF4D5E] to-amber-400">
-                  AI Precision
+              <h1 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight font-display">
+                Automated Packaged Commodity Compliance with{' '}
+                <span className="text-[#131b2e] underline decoration-slate-400 decoration-2 underline-offset-4">
+                  Statutory Precision
                 </span>
               </h1>
               
-              <p className="text-sm xl:text-base text-[#A5A7B0] leading-relaxed max-w-xl">
+              <p className="text-sm text-slate-600 leading-relaxed max-w-xl">
                 RuleVision delivers automated compliance screening for packaged commodities under the{' '}
-                <strong className="text-white">Legal Metrology Act</strong> and{' '}
-                <strong className="text-white">Packaged Commodities Rules</strong>. 
-                From real-time label OCR to statutory field validation and instant infraction reports.
+                <strong className="text-slate-900 font-semibold">Legal Metrology Act, 2009</strong> and the{' '}
+                <strong className="text-slate-900 font-semibold">Packaged Commodities Rules (PCR), 2011</strong>. 
+                Perform high-precision label OCR, verify statutory declarations, and generate official court-ready audit dossiers.
               </p>
             </div>
 
-            {/* Packaging Scanner Simulation Card */}
-            <div className="relative rounded-2xl bg-[#14151B] border border-[#292B34] p-5 shadow-2xl overflow-hidden group hover:border-[#FF2638]/40 transition-all duration-300">
-              {/* Laser Scan Line Animation */}
-              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#FF2638] to-transparent animate-pulse shadow-[0_0_12px_#FF2638]" />
-              
-              <div className="flex items-start justify-between mb-4">
+            {/* Packaging Scanner Specification Matrix Card */}
+            <div className="rounded-xl bg-white border border-slate-200 p-5 shadow-xs">
+              <div className="flex items-start justify-between mb-4 pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#1B1C23] border border-[#292B34] flex items-center justify-center text-[#FF2638]">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800">
                     <Scan className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-white block">Real-time Statutory Compliance Scanner</span>
-                    <span className="text-[10px] text-[#A5A7B0]">Standard Label Verification (Rule 6 Declarations)</span>
+                    <span className="text-xs font-bold text-slate-900 block font-display">Mandatory Declarations Verification Matrix</span>
+                    <span className="text-[11px] text-slate-500 font-mono">Rule 6(1) Statutory Provisions</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
-                  Active AI Engine
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  PCR 2011 VERIFIED
                 </span>
               </div>
 
-              {/* Sample Packaging Metric Pills */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                <div className="p-2 rounded-lg bg-[#101116] border border-[#292B34]">
-                  <span className="text-[10px] text-[#A5A7B0] block">Rule 6(1)(a)</span>
-                  <span className="font-semibold text-white truncate block">Manufacturer & Address</span>
+              {/* Statutory Metric Pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                <div className="p-2.5 rounded-lg bg-slate-50/80 border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-mono block">Rule 6(1)(a)</span>
+                  <span className="font-semibold text-slate-800 truncate block text-xs">Manufacturer &amp; Address</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#101116] border border-[#292B34]">
-                  <span className="text-[10px] text-[#A5A7B0] block">Rule 6(1)(b)</span>
-                  <span className="font-semibold text-white truncate block">Commodity Name</span>
+                <div className="p-2.5 rounded-lg bg-slate-50/80 border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-mono block">Rule 6(1)(b)</span>
+                  <span className="font-semibold text-slate-800 truncate block text-xs">Generic Name</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#101116] border border-[#292B34]">
-                  <span className="text-[10px] text-[#A5A7B0] block">Rule 6(1)(c)</span>
-                  <span className="font-semibold text-emerald-400 truncate block">Net Quantity</span>
+                <div className="p-2.5 rounded-lg bg-slate-50/80 border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-mono block">Rule 6(1)(c)</span>
+                  <span className="font-semibold text-emerald-700 truncate block text-xs">Net Quantity &amp; Units</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#101116] border border-[#292B34]">
-                  <span className="text-[10px] text-[#A5A7B0] block">Rule 6(1)(d)</span>
-                  <span className="font-semibold text-white truncate block">Mfg / Packing Date</span>
+                <div className="p-2.5 rounded-lg bg-slate-50/80 border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-mono block">Rule 6(1)(d)</span>
+                  <span className="font-semibold text-slate-800 truncate block text-xs">Mfg / Packing Date</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#101116] border border-[#292B34]">
-                  <span className="text-[10px] text-[#A5A7B0] block">Rule 6(1)(e)</span>
-                  <span className="font-semibold text-emerald-400 truncate block">MRP (Taxes Incl.)</span>
+                <div className="p-2.5 rounded-lg bg-slate-50/80 border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-mono block">Rule 6(1)(e)</span>
+                  <span className="font-semibold text-emerald-700 truncate block text-xs">MRP (Taxes Incl.)</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#101116] border border-[#292B34]">
-                  <span className="text-[10px] text-[#A5A7B0] block">Rule 6(1)(f)</span>
-                  <span className="font-semibold text-white truncate block">Consumer Care Contact</span>
+                <div className="p-2.5 rounded-lg bg-slate-50/80 border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-mono block">Rule 6(1)(f)</span>
+                  <span className="font-semibold text-slate-800 truncate block text-xs">Consumer Care Contact</span>
                 </div>
               </div>
             </div>
 
-            {/* Core Capabilities Grid */}
-            <div className="grid grid-cols-3 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-[#101116]/60 border border-[#292B34] space-y-1">
-                <Cpu className="w-4 h-4 text-[#FF2638]" />
-                <h2 className="text-xs font-bold text-white">Multimodal AI OCR</h2>
-                <p className="text-[11px] text-[#A5A7B0] leading-tight">
-                  High-accuracy recognition for curved, reflective, or cylindrical packaging.
+            {/* Core Capabilities 3-Card Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5 shadow-xs">
+                <Cpu className="w-4 h-4 text-slate-800" />
+                <h2 className="text-xs font-bold text-slate-900 font-display">Multimodal AI OCR</h2>
+                <p className="text-[11px] text-slate-500 leading-tight">
+                  High-accuracy recognition for curved, reflective, or cylindrical packaging surfaces.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#101116]/60 border border-[#292B34] space-y-1">
-                <FileCheck2 className="w-4 h-4 text-emerald-400" />
-                <h2 className="text-xs font-bold text-white">Rule Verification</h2>
-                <p className="text-[11px] text-[#A5A7B0] leading-tight">
-                  Evaluates mandatory declarations against legal rules with penalty calculations.
+              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5 shadow-xs">
+                <FileCheck2 className="w-4 h-4 text-emerald-600" />
+                <h2 className="text-xs font-bold text-slate-900 font-display">Rule Engine</h2>
+                <p className="text-[11px] text-slate-500 leading-tight">
+                  Evaluates mandatory declarations against legal rules with statutory infraction scoring.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#101116]/60 border border-[#292B34] space-y-1">
-                <ShieldCheck className="w-4 h-4 text-blue-400" />
-                <h2 className="text-xs font-bold text-white">Official Audits</h2>
-                <p className="text-[11px] text-[#A5A7B0] leading-tight">
-                  Generates court-ready PDF inspection dossiers and show-cause notices.
+              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5 shadow-xs">
+                <ShieldCheck className="w-4 h-4 text-slate-800" />
+                <h2 className="text-xs font-bold text-slate-900 font-display">Official Dossiers</h2>
+                <p className="text-[11px] text-slate-500 leading-tight">
+                  Generates court-ready PDF inspection reports, show-cause notices, and Section 36 dockets.
                 </p>
               </div>
             </div>
@@ -342,44 +352,42 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               />
             </div>
 
-            <div className="bg-[#14151B] rounded-2xl border border-[#292B34] shadow-2xl p-6 sm:p-8 space-y-6 relative overflow-hidden">
-              {/* Ambient Glow */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF2638]/5 rounded-full blur-2xl pointer-events-none" />
-
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-5">
+              
               {/* Header */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 border-b border-slate-100 pb-4">
                 <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#1B1C23] border border-[#292B34] text-[#FF2638] shadow-xs">
-                    <KeyRound className="w-5 h-5" />
+                  <div className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-800">
+                    <KeyRound className="w-4 h-4" />
                   </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#A5A7B0] bg-[#101116] px-2.5 py-1 rounded-full border border-[#292B34]">
-                    {authMode === 'login' ? 'Secure Sign In' : authMode === 'signup' ? 'Create Account' : 'Account Recovery'}
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
+                    {authMode === 'login' ? 'SECURE SIGN IN' : authMode === 'signup' ? 'REGISTRATION' : 'RECOVERY'}
                   </span>
                 </div>
                 
-                <h2 className="text-2xl font-black text-white tracking-tight pt-2">
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight pt-2 font-display">
                   {authMode === 'login' && 'Sign In to RuleVision'}
                   {authMode === 'signup' && 'Create Your Account'}
                   {authMode === 'forgot_password' && 'Reset Password'}
                 </h2>
-                <p className="text-xs text-[#A5A7B0]">
+                <p className="text-xs text-slate-500">
                   {authMode === 'login' && 'Enter your credentials to access your inspection workspace.'}
                   {authMode === 'signup' && 'Register as a citizen or officer to inspect packaged commodities.'}
-                  {authMode === 'forgot_password' && 'Enter your registered email to receive password reset link.'}
+                  {authMode === 'forgot_password' && 'Enter your registered email to receive a password reset link.'}
                 </p>
               </div>
 
               {/* Feedback Banners */}
               {errorMessage && (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-300 text-xs">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
                   <span>{errorMessage}</span>
                 </div>
               )}
 
               {successMessage && (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
+                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
                   <span>{successMessage}</span>
                 </div>
               )}
@@ -388,8 +396,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               {authMode === 'login' && (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-[#A5A7B0]" />
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-slate-500" />
                       Email Address
                     </label>
                     <input
@@ -398,14 +406,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="user@example.com"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-[#A5A7B0]" />
+                      <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-slate-500" />
                         Password
                       </label>
                       <button
@@ -415,7 +423,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                           setSuccessMessage(null);
                           setAuthMode('forgot_password');
                         }}
-                        className="text-xs text-[#A5A7B0] hover:text-[#FF2638] font-medium transition-colors cursor-pointer"
+                        className="text-xs text-slate-500 hover:text-slate-800 font-medium transition-colors cursor-pointer"
                       >
                         Forgot Password?
                       </button>
@@ -427,15 +435,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                        className="w-full px-3 py-2 pr-10 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all font-mono"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A5A7B0] hover:text-white p-1 cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
                         tabIndex={-1}
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
@@ -443,19 +451,75 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 px-4 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-sm font-bold shadow-lg shadow-[#FF2638]/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-lg bg-[#131b2e] hover:bg-[#1e293b] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? 'Authenticating...' : 'Sign In to Workspace'}
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
+                  {/* Master Admin Portal Credentials & Quick Access Banner */}
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 font-display">
+                        <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
+                        Master Administrator Portal
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
+                        admin@iare.com
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-slate-600">
+                      <span className="text-[11px] font-mono">
+                        Pass: <strong className="text-slate-900 font-mono">murali@123</strong>
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmail('admin@iare.com');
+                            setPassword('murali@123');
+                            setErrorMessage(null);
+                          }}
+                          className="px-2 py-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-semibold cursor-pointer transition-colors"
+                        >
+                          Auto-Fill
+                        </button>
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={async () => {
+                            setEmail('admin@iare.com');
+                            setPassword('murali@123');
+                            setErrorMessage(null);
+                            setLoading(true);
+                            try {
+                              const res = await authService.signIn('admin@iare.com', 'murali@123');
+                              if (res.success && res.user) {
+                                onLoginSuccess(res.user);
+                              } else {
+                                setErrorMessage(res.error || 'Failed to authenticate admin.');
+                              }
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold shadow-xs cursor-pointer transition-all flex items-center gap-1"
+                        >
+                          <span>1-Click Login</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Inspector Portal Login Divider & Button */}
-                  <div className="relative flex items-center justify-center pt-2">
-                    <div className="border-t border-[#292B34] w-full" />
-                    <span className="bg-[#14151B] px-3 text-[10px] font-bold text-[#71737E] uppercase tracking-wider whitespace-nowrap">
-                      Authorized Enforcement
+                  <div className="relative flex items-center justify-center pt-1">
+                    <div className="border-t border-slate-200 w-full" />
+                    <span className="bg-white px-3 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                      ENFORCEMENT ACCESS
                     </span>
-                    <div className="border-t border-[#292B34] w-full" />
+                    <div className="border-t border-slate-200 w-full" />
                   </div>
 
                   <button
@@ -466,11 +530,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       setSuccessMessage(null);
                       setAuthMode('inspector_otp');
                     }}
-                    className="w-full py-2.5 px-4 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer group shadow-xs"
+                    className="w-full py-2.5 px-4 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer group shadow-xs"
                   >
-                    <Shield className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                    <Shield className="w-4 h-4 text-amber-600 group-hover:scale-105 transition-transform" />
                     <span>Legal Metrology Inspector Login (Email OTP)</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
                   </button>
 
                   <div className="pt-2 text-center">
@@ -481,11 +545,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         setSuccessMessage(null);
                         setAuthMode('signup');
                       }}
-                      className="text-xs font-semibold text-[#A5A7B0] hover:text-white transition-colors cursor-pointer"
+                      className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                     >
-                      Don't have an account? <span className="text-[#FF2638] underline underline-offset-2">Create Account</span>
+                      Don't have an account? <span className="text-slate-900 font-semibold underline underline-offset-2">Create Account</span>
                     </button>
                   </div>
+
+                  {onNavigateToAdminLogin && (
+                    <div className="pt-2 text-center border-t border-slate-100">
+                      <button
+                        type="button"
+                        id="link-admin-portal-login"
+                        onClick={onNavigateToAdminLogin}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
+                        <span>Open Dedicated Administrator Portal (/admin)</span>
+                      </button>
+                    </div>
+                  )}
                 </form>
               )}
 
@@ -494,37 +572,37 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 <form onSubmit={handleSignUp} className="space-y-4">
                   {/* Step 1: Select Account Type Cards */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-[#F5F5F7] block uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-800 block uppercase tracking-wider font-mono">
                       Select Account Type
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {/* Consumer Card */}
                       <div
                         onClick={() => setAccountType('consumer')}
-                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden ${
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between relative ${
                           accountType === 'consumer'
-                            ? 'border-[#FF2638] bg-[#FF2638]/10 ring-1 ring-[#FF2638]/50 shadow-md shadow-[#FF2638]/10'
-                            : 'border-[#292B34] bg-[#101116] hover:border-slate-600 hover:bg-[#15161D]'
+                            ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                       >
                         {accountType === 'consumer' && (
-                          <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#FF2638] flex items-center justify-center text-white">
+                          <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-white">
                             <Check className="w-2.5 h-2.5 stroke-[3]" />
                           </div>
                         )}
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className={`p-1.5 rounded-lg ${accountType === 'consumer' ? 'bg-[#FF2638]/20 text-[#FF2638]' : 'bg-[#1F2028] text-slate-400'}`}>
-                              <User className="w-4 h-4" />
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <div className={`p-1 rounded ${accountType === 'consumer' ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'}`}>
+                              <User className="w-3.5 h-3.5" />
                             </div>
-                            <span className="text-xs font-bold text-white uppercase tracking-wider">Consumer</span>
+                            <span className="text-xs font-bold text-slate-900 font-display">Consumer</span>
                           </div>
-                          <p className="text-[11px] text-[#A5A7B0] leading-snug">
-                            Scan product labels, check declarations, and view your personal inspection history.
+                          <p className="text-[11px] text-slate-500 leading-snug">
+                            Scan labels, verify mandatory statutory declarations, and maintain your personal dossier.
                           </p>
                         </div>
-                        <div className="mt-2.5 pt-2 border-t border-[#292B34]/60">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
+                        <div className="mt-2 pt-1.5 border-t border-slate-200">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 font-mono">
                             <CheckCircle2 className="w-3 h-3" />
                             Immediate Access
                           </span>
@@ -534,32 +612,32 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       {/* Legal Metrology Inspector Card */}
                       <div
                         onClick={() => setAccountType('inspector')}
-                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden ${
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between relative ${
                           accountType === 'inspector'
-                            ? 'border-[#FF2638] bg-[#FF2638]/10 ring-1 ring-[#FF2638]/50 shadow-md shadow-[#FF2638]/10'
-                            : 'border-[#292B34] bg-[#101116] hover:border-slate-600 hover:bg-[#15161D]'
+                            ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                       >
                         {accountType === 'inspector' && (
-                          <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#FF2638] flex items-center justify-center text-white">
+                          <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-white">
                             <Check className="w-2.5 h-2.5 stroke-[3]" />
                           </div>
                         )}
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className={`p-1.5 rounded-lg ${accountType === 'inspector' ? 'bg-[#FF2638]/20 text-[#FF2638]' : 'bg-[#1F2028] text-slate-400'}`}>
-                              <Shield className="w-4 h-4" />
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <div className={`p-1 rounded ${accountType === 'inspector' ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-500'}`}>
+                              <Shield className="w-3.5 h-3.5" />
                             </div>
-                            <span className="text-xs font-bold text-white uppercase tracking-wider">Legal Metrology Inspector</span>
+                            <span className="text-xs font-bold text-slate-900 font-display">Inspector</span>
                           </div>
-                          <p className="text-[11px] text-[#A5A7B0] leading-snug">
-                            Request inspector access to conduct and manage authorized product compliance inspections.
+                          <p className="text-[11px] text-slate-500 leading-snug">
+                            Conduct official audits, formulate violation dockets, and issue enforcement show-cause notices.
                           </p>
                         </div>
-                        <div className="mt-2.5 pt-2 border-t border-[#292B34]/60">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400">
+                        <div className="mt-2 pt-1.5 border-t border-slate-200">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 font-mono">
                             <AlertCircle className="w-3 h-3" />
-                            Requires Verification
+                            Official Verification
                           </span>
                         </div>
                       </div>
@@ -568,8 +646,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
                   {/* Common Field: Full Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-[#A5A7B0]" />
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-slate-500" />
                       Full Name
                     </label>
                     <input
@@ -578,15 +656,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="e.g. Rajesh Kumar"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all"
                     />
                   </div>
 
                   {/* Common Field: Email Address */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-[#A5A7B0]" />
-                      {accountType === 'inspector' ? 'Official Email Address' : 'Email Address'}
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-slate-500" />
+                      {accountType === 'inspector' ? 'Official Government / Authority Email' : 'Email Address'}
                     </label>
                     <input
                       type="email"
@@ -594,25 +672,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={accountType === 'inspector' ? 'officer@dept.gov.in' : 'citizen@example.com'}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all"
                     />
                   </div>
 
                   {/* Inspector Specific Verification Section */}
                   {accountType === 'inspector' && (
-                    <div className="p-3.5 rounded-xl bg-[#0F1015] border border-[#292B34] space-y-3">
-                      <div className="flex items-center gap-2 pb-1.5 border-b border-[#20222B]">
-                        <Shield className="w-4 h-4 text-[#FF2638]" />
-                        <span className="text-xs font-bold text-white uppercase tracking-wider">
-                          Inspector Verification Details
+                    <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+                      <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200">
+                        <Shield className="w-4 h-4 text-slate-800" />
+                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono">
+                          Inspector Verification Credentials
                         </span>
                       </div>
 
                       {/* Inspector ID / Employee ID */}
                       <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
-                          <span>Inspector ID / Employee ID</span>
-                          <span className="text-[#FF2638]">*</span>
+                        <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1">
+                          <span>Inspector ID / Badge Number</span>
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -620,16 +698,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                           value={inspectorId}
                           onChange={(e) => setInspectorId(e.target.value)}
                           placeholder="e.g. LM-KA-2024-089"
-                          className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                          className="w-full px-3 py-1.5 rounded-md border border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 font-mono"
                         />
                       </div>
 
                       {/* Department / Office */}
                       <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
-                          <Building2 className="w-3 h-3 text-[#A5A7B0]" />
-                          <span>Department / Office</span>
-                          <span className="text-[#FF2638]">*</span>
+                        <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1">
+                          <Building2 className="w-3 h-3 text-slate-500" />
+                          <span>Department / Authority</span>
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -637,25 +715,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           placeholder="e.g. Department of Legal Metrology"
-                          className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                          className="w-full px-3 py-1.5 rounded-md border border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
                         />
                       </div>
 
                       {/* Jurisdiction State & District */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-[#A5A7B0]" />
+                          <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-slate-500" />
                             <span>State / UT</span>
-                            <span className="text-[#FF2638]">*</span>
+                            <span className="text-red-500">*</span>
                           </label>
                           <select
                             value={state}
                             onChange={(e) => setState(e.target.value)}
-                            className="w-full px-2.5 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white text-xs focus:outline-none focus:border-[#FF2638]"
+                            className="w-full px-2 py-1.5 rounded-md border border-slate-200 bg-white text-slate-900 text-xs focus:outline-none focus:border-slate-800"
                           >
                             {INDIAN_STATES.map((st) => (
-                              <option key={st} value={st} className="bg-[#14151B] text-white">
+                              <option key={st} value={st} className="text-slate-900">
                                 {st}
                               </option>
                             ))}
@@ -663,9 +741,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center gap-1">
+                          <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1">
                             <span>District / Zone</span>
-                            <span className="text-[#FF2638]">*</span>
+                            <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -673,19 +751,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                             value={district}
                             onChange={(e) => setDistrict(e.target.value)}
                             placeholder="e.g. Bengaluru Urban"
-                            className="w-full px-3 py-2 rounded-lg border border-[#292B34] bg-[#14151B] text-white placeholder-[#71737E] text-xs focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638]"
+                            className="w-full px-3 py-1.5 rounded-md border border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
                           />
                         </div>
                       </div>
 
-                      {/* Supporting Document Upload (Optional) */}
+                      {/* Supporting Document Upload */}
                       <div className="space-y-1 pt-1">
-                        <label className="text-[11px] font-semibold text-[#C5C7D0] flex items-center justify-between">
+                        <label className="text-[11px] font-semibold text-slate-700 flex items-center justify-between">
                           <span className="flex items-center gap-1">
-                            <FileText className="w-3 h-3 text-[#A5A7B0]" />
+                            <FileText className="w-3 h-3 text-slate-500" />
                             Supporting Document (ID / Appointment Order)
                           </span>
-                          <span className="text-[10px] text-[#71737E]">Optional</span>
+                          <span className="text-[10px] text-slate-400 font-mono">Optional</span>
                         </label>
                         <div className="relative">
                           <input
@@ -701,18 +779,18 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                           />
                           <label
                             htmlFor="inspector-doc-upload"
-                            className="flex items-center justify-between px-3 py-2 rounded-lg border border-dashed border-[#292B34] bg-[#14151B] hover:border-[#FF2638]/60 cursor-pointer text-xs transition-colors"
+                            className="flex items-center justify-between px-3 py-2 rounded-md border border-dashed border-slate-300 bg-white hover:border-slate-400 cursor-pointer text-xs transition-colors"
                           >
-                            <span className="text-[#A5A7B0] truncate">
-                              {supportingDocFile ? supportingDocFile.name : 'Click to attach ID Card or Official Order (PDF/JPG)'}
+                            <span className="text-slate-600 truncate">
+                              {supportingDocFile ? supportingDocFile.name : 'Attach Official Order / ID Card (PDF/JPG)'}
                             </span>
-                            <UploadCloud className="w-4 h-4 text-[#FF2638] shrink-0 ml-2" />
+                            <UploadCloud className="w-4 h-4 text-slate-600 shrink-0 ml-2" />
                           </label>
                           {supportingDocFile && (
                             <button
                               type="button"
                               onClick={() => setSupportingDocFile(null)}
-                              className="text-[10px] text-red-400 hover:text-red-300 mt-1 inline-block"
+                              className="text-[10px] text-red-600 hover:underline mt-1 inline-block"
                             >
                               Remove attached document
                             </button>
@@ -721,11 +799,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       </div>
 
                       {/* Info Notice for Inspector Approval */}
-                      <div className="p-3 rounded-lg bg-amber-950/40 border border-amber-800/60 text-[11px] text-amber-300/90 leading-relaxed flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                      <div className="p-2.5 rounded-md bg-amber-50 border border-amber-200 text-[11px] text-amber-800 leading-relaxed flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
                         <div>
-                          <strong className="text-white block mb-0.5">Administrative Verification Required</strong>
-                          <span>Inspector access requires administrative verification. Submitting this request does not automatically grant inspector privileges. While your request is pending review, you can still access the Consumer workspace.</span>
+                          <strong className="font-semibold block mb-0.5">Statutory Authorization Required</strong>
+                          <span>Inspector accounts require administrative clearance. While pending approval, you can access the standard Consumer workspace.</span>
                         </div>
                       </div>
                     </div>
@@ -733,8 +811,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
                   {/* Password Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-[#A5A7B0]" />
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
                       Password
                     </label>
                     <div className="relative">
@@ -745,23 +823,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="At least 6 characters"
-                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                        className="w-full px-3 py-2 pr-10 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all font-mono"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A5A7B0] hover:text-white p-1 cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
                         tabIndex={-1}
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
 
                   {/* Confirm Password Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-[#A5A7B0]" />
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
                       Confirm Password
                     </label>
                     <div className="relative">
@@ -772,15 +850,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Re-enter your password"
-                        className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                        className="w-full px-3 py-2 pr-10 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all font-mono"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A5A7B0] hover:text-white p-1 cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
                         tabIndex={-1}
                       >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
@@ -788,19 +866,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 px-4 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-sm font-bold shadow-lg shadow-[#FF2638]/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-lg bg-[#131b2e] hover:bg-[#1e293b] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? (
-                      'Processing Request...'
+                      'Processing...'
                     ) : accountType === 'inspector' ? (
                       <>
-                        <span>Submit Inspector Access Request</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <span>Submit Inspector Verification Request</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     ) : (
                       <>
                         <span>Create RuleVision Account</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
@@ -813,9 +891,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         setSuccessMessage(null);
                         setAuthMode('login');
                       }}
-                      className="text-xs font-semibold text-[#A5A7B0] hover:text-white transition-colors cursor-pointer"
+                      className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                     >
-                      Already have an account? <span className="text-[#FF2638] underline underline-offset-2">Sign In</span>
+                      Already have an account? <span className="text-slate-900 font-semibold underline underline-offset-2">Sign In</span>
                     </button>
                   </div>
                 </form>
@@ -825,8 +903,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               {authMode === 'forgot_password' && (
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#F5F5F7] flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-[#A5A7B0]" />
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-slate-500" />
                       Registered Email Address
                     </label>
                     <input
@@ -835,14 +913,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@example.com"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#292B34] bg-[#101116] text-white placeholder-[#71737E] text-sm focus:outline-none focus:border-[#FF2638] focus:ring-1 focus:ring-[#FF2638] transition-all"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 px-4 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-sm font-bold shadow-lg shadow-[#FF2638]/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-lg bg-[#131b2e] hover:bg-[#1e293b] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? 'Sending Instructions...' : 'Send Password Reset Link'}
                   </button>
@@ -855,9 +933,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                         setSuccessMessage(null);
                         setAuthMode('login');
                       }}
-                      className="text-xs font-semibold text-[#A5A7B0] hover:text-white transition-colors cursor-pointer"
+                      className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                     >
-                      Remember your password? <span className="text-[#FF2638] underline underline-offset-2">Back to Sign In</span>
+                      Remember your password? <span className="text-slate-900 font-semibold underline underline-offset-2">Back to Sign In</span>
                     </button>
                   </div>
                 </form>
@@ -869,14 +947,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="py-4 px-4 sm:px-8 border-t border-[#292B34] bg-[#101116]/80 text-center text-xs text-[#A5A7B0] flex flex-col sm:flex-row items-center justify-between gap-2">
+      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 bg-white text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-white">RuleVision</span>
+          <span className="font-bold text-slate-800 font-display">RuleVision</span>
           <span>•</span>
-          <span>Legal Metrology Screening Platform</span>
+          <span>Legal Metrology Statutory Screening Platform</span>
         </div>
-        <div className="text-[11px] text-[#71737E]">
-          RuleVision • AI-Powered Legal Metrology Compliance Inspection Platform
+        <div className="text-[11px] text-slate-400 font-mono">
+          DIRECTORATE OF LEGAL METROLOGY • ACT 2009 &amp; PCR 2011
         </div>
       </footer>
     </div>

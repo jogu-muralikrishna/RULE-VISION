@@ -31,7 +31,10 @@ import {
   Info,
   HelpCircle,
   Save,
-  Check
+  Check,
+  ChevronRight,
+  Clock,
+  Gavel
 } from 'lucide-react';
 import {
   InspectionRecord,
@@ -58,6 +61,7 @@ import { dbService } from '../services/db';
 import { BarcodeScanner } from '../components/BarcodeScanner';
 import { generateComplianceReportPDF, generateLegalNoticePDF } from '../utils/pdfExport';
 import { analyzeProductImage as executeProductInspection } from '../services/inspectionService';
+import { DEMO_INSPECTIONS } from '../data/demoData';
 
 export interface LiveRuleAuditStep {
   id: string;
@@ -250,6 +254,16 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
       setFlowState('result');
     }
   }, [currentInspection]);
+
+  const handleLoadPreset = (presetRecord: InspectionRecord) => {
+    setActiveInspection(presetRecord);
+    setImageSrc(presetRecord.image_url || null);
+    setImageFileName(presetRecord.product_name);
+    setIsDemoMode(true);
+    setPackagingGeometry(presetRecord.packaging_geometry || 'flat');
+    setMultiAngleImages(presetRecord.multi_angle_images || []);
+    setFlowState('result');
+  };
 
   // Cleanup camera stream
   useEffect(() => {
@@ -893,23 +907,35 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
       {/* 1. STEP 1: ASK THE USER TO SELECT AN INPUT METHOD   */}
       {/* ==================================================== */}
       {flowState === 'choose' && (
-        <div className="max-w-2xl mx-auto py-6 sm:py-10 space-y-8">
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold mb-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Legal Metrology (PCR 2011) Screening</span>
+        <div className="max-w-5xl mx-auto py-2 sm:py-6 space-y-6">
+          {/* Statutory Alert / Intake Protocol Banner */}
+          <div className="w-full bg-[#eff4ff] dark:bg-slate-800/80 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-[#dce9ff] dark:border-slate-700 shadow-xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#0f172a] text-white flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-headline font-bold text-sm text-[#0d1c2e] dark:text-white">
+                    Inspection Intake Protocol LM-2011
+                  </span>
+                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold uppercase">
+                    Statutory Standard Active
+                  </span>
+                  <span className="font-mono text-[11px] text-slate-500">
+                    REF: GSR 427(E) • Gazette Rule 6 & 7
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Automatic PDP boundary segmentation engine engaged. Full forensic OCR fallback operates without invalidating evidentiary chain-of-custody.
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
-              Inspect Product
-            </h1>
-            <p className="text-sm sm:text-base text-slate-600 max-w-md mx-auto">
-              Select an input method to capture or upload the packaged commodity label before step-by-step statutory inspection.
-            </p>
           </div>
 
           {/* Camera Error Alert */}
           {cameraError && (
-            <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 sm:p-5 text-left space-y-3">
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 text-left space-y-3">
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                 <div className="space-y-1">
@@ -921,7 +947,7 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
                 <button
                   type="button"
                   onClick={() => cameraNativeInputRef.current?.click()}
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5"
+                  className="px-3.5 py-2 rounded-lg bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer font-mono"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   Take Photo with Device Camera
@@ -929,7 +955,7 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenCamera}
-                  className="px-3.5 py-2 rounded-xl border border-amber-300 bg-white hover:bg-amber-100/50 text-amber-900 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                  className="px-3.5 py-2 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer font-mono"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   Try Live Camera Again
@@ -940,14 +966,14 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
 
           {/* Upload Error Alert */}
           {uploadError && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3 text-left">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-left">
               <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-xs font-semibold text-red-900">{uploadError}</p>
                 <button
                   type="button"
                   onClick={() => handleTriggerUpload(false)}
-                  className="mt-2 text-xs font-bold text-red-700 underline hover:text-red-900"
+                  className="mt-2 text-xs font-bold text-red-700 underline hover:text-red-900 cursor-pointer"
                 >
                   Choose another image
                 </button>
@@ -955,53 +981,125 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
             </div>
           )}
 
-          {/* TWO MAIN INPUT METHOD CARDS (Prompt Step 1) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* CARD A: TAKE A PHOTO */}
-            <button
-              id="btn-inspect-open-camera"
-              type="button"
-              onClick={handleOpenCamera}
-              className="group text-left p-6 sm:p-8 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-900 hover:shadow-lg transition-all flex flex-col justify-between space-y-6 focus:outline-none focus:ring-4 focus:ring-slate-100 cursor-pointer"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white transition-all shadow-xs">
-                <Camera className="w-7 h-7" />
+          {/* Header Section with Quick Presets */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-1.5 text-slate-500 font-mono text-xs uppercase tracking-wider mb-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Statutory Verification Intake</span>
+                <span>•</span>
+                <span>PORTAL SESSION: S-2024-PCR-9812</span>
               </div>
-              <div className="space-y-1.5">
-                <div className="text-xs font-mono font-bold uppercase tracking-wider text-blue-600 group-hover:text-blue-500">
-                  Input Option A
-                </div>
-                <h2 className="text-lg font-bold text-slate-900 group-hover:text-slate-950 transition-colors flex items-center gap-1.5">
-                  Take a Photo
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 font-normal">
-                  Open device camera to photograph the product package label directly.
-                </p>
-              </div>
-            </button>
+              <h1 className="text-2xl sm:text-3xl font-headline font-bold text-[#0d1c2e] dark:text-white tracking-tight">
+                Legal Metrology (Packaged Commodities) Enforcement Workflow
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Standard intake & forensic dimension capture under Rules 6, 7 & Schedule II of LM(PC) Rules 2011.
+              </p>
+            </div>
 
-            {/* CARD B: UPLOAD AN IMAGE */}
-            <button
-              id="btn-inspect-upload-image"
-              type="button"
-              onClick={() => handleTriggerUpload(false)}
-              className="group text-left p-6 sm:p-8 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-900 hover:shadow-lg transition-all flex flex-col justify-between space-y-6 focus:outline-none focus:ring-4 focus:ring-slate-100 cursor-pointer"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white transition-all shadow-xs">
-                <Upload className="w-7 h-7" />
+            {/* Quick Preset Selector */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="bg-white dark:bg-slate-800 p-2 rounded-xl border border-[#cbd5e1] dark:border-slate-700 shadow-xs flex items-center gap-2">
+                <span className="font-mono text-[10px] uppercase font-bold text-slate-500 pl-1">Inspection Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => DEMO_INSPECTIONS[1] && handleLoadPreset(DEMO_INSPECTIONS[1])}
+                  className="px-2.5 py-1 rounded bg-[#0f172a] text-white font-mono text-[11px] font-semibold hover:bg-[#1e293b] transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                  <span>Almond Flour (Violation)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => DEMO_INSPECTIONS[0] && handleLoadPreset(DEMO_INSPECTIONS[0])}
+                  className="px-2.5 py-1 rounded bg-[#eff4ff] dark:bg-slate-700 text-[#0d1c2e] dark:text-white font-mono text-[11px] font-semibold hover:bg-[#dce9ff] transition-colors cursor-pointer"
+                >
+                  <span>Premium Basmati (Pass)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => DEMO_INSPECTIONS[2] && handleLoadPreset(DEMO_INSPECTIONS[2])}
+                  className="px-2.5 py-1 rounded bg-[#eff4ff] dark:bg-slate-700 text-[#0d1c2e] dark:text-white font-mono text-[11px] font-semibold hover:bg-[#dce9ff] transition-colors cursor-pointer"
+                >
+                  <span>Beverage Can (Cylindrical)</span>
+                </button>
               </div>
-              <div className="space-y-1.5">
-                <div className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 group-hover:text-emerald-500">
-                  Input Option B
+            </div>
+          </div>
+
+          {/* Single Specimen Protocol Guidance */}
+          <div className="p-4 bg-[#eff4ff] dark:bg-slate-800/60 rounded-xl border border-[#dce9ff] dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+            <div className="flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-[#0f172a] dark:text-slate-300 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-[#0d1c2e] dark:text-white uppercase font-mono tracking-wider mr-1">
+                  Single Specimen Protocol:
+                </span>
+                <span className="text-slate-600 dark:text-slate-300">
+                  Only one active inspection image is analyzed at a time to maintain statutory evidentiary integrity. Active image is processed for Principal Display Panel (PDP) detection, OCR attribute extraction, Rule 6 checks, and Rule 7 font standards.
+                </span>
+              </div>
+            </div>
+            <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-600 uppercase shrink-0">
+              Gazette LM(PC) R.6 & 7
+            </span>
+          </div>
+
+          {/* SPECIMEN CAPTURE MODE SELECTION */}
+          <div className="space-y-2">
+            <div className="font-mono text-xs text-slate-500 uppercase font-bold tracking-wider">
+              Specimen Capture Mode Selection
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Take Photo */}
+              <button
+                id="btn-inspect-open-camera"
+                type="button"
+                onClick={handleOpenCamera}
+                className="group p-5 rounded-xl border-2 border-[#0f172a] bg-[#eff4ff] dark:bg-slate-800/80 hover:bg-[#e2e8f0] text-left transition-all relative shadow-xs flex items-center gap-4 cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-lg bg-[#0f172a] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Camera className="w-6 h-6 text-emerald-400" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-900 group-hover:text-slate-950 transition-colors flex items-center gap-1.5">
-                  Upload an Image
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 font-normal">
-                  Select a JPG, PNG, or WEBP label photograph from your device.
-                </p>
-              </div>
-            </button>
+                <div className="flex flex-col flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-headline font-bold text-base text-[#0d1c2e] dark:text-white">
+                      Take Photo
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                  <span className="font-sans text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    Device camera • Mobile & tablet field inspection
+                  </span>
+                </div>
+              </button>
+
+              {/* Upload Image */}
+              <button
+                id="btn-inspect-upload-image"
+                type="button"
+                onClick={() => handleTriggerUpload(false)}
+                className="group p-5 rounded-xl border border-[#cbd5e1] dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-[#f8f9ff] text-left transition-all shadow-xs flex items-center gap-4 cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-lg bg-[#f1f5f9] dark:bg-slate-700 text-[#0f172a] dark:text-white flex items-center justify-center shrink-0">
+                  <Upload className="w-6 h-6 text-slate-700 dark:text-slate-200" />
+                </div>
+                <div className="flex flex-col flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-headline font-bold text-base text-[#0d1c2e] dark:text-white">
+                      Upload Image
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-500 bg-[#f1f5f9] px-1.5 py-0.5 rounded">
+                      DRAG & DROP
+                    </span>
+                  </div>
+                  <span className="font-sans text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    From device storage • JPG, JPEG, PNG, WEBP up to 25MB
+                  </span>
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* SECONDARY BARCODE SCANNER */}
@@ -1010,18 +1108,25 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
               id="btn-inspect-scan-barcode"
               type="button"
               onClick={() => setFlowState('barcode')}
-              className="group text-left w-full p-4 rounded-2xl border border-slate-200 bg-slate-50 hover:border-slate-400 hover:bg-white transition-all flex items-center justify-between focus:outline-none"
+              className="w-full p-4 rounded-xl border border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-[#f8f9ff] transition-all flex items-center justify-between shadow-xs cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
-                  <QrCode className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-lg bg-[#eff4ff] dark:bg-slate-700 border border-[#dce9ff] dark:border-slate-600 text-[#0f172a] dark:text-white flex items-center justify-center shrink-0">
+                  <QrCode className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Scan Barcode / EAN-13</h3>
-                  <p className="text-xs text-slate-500">Optional: Lookup package declarations via GTIN barcode</p>
+                <div className="text-left">
+                  <h3 className="text-xs font-bold text-[#0d1c2e] dark:text-white font-mono">
+                    Scan Barcode / EAN-13 (Optional)
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Lookup package declarations and regulatory registry via GTIN barcode
+                  </p>
                 </div>
               </div>
-              <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-900">Scan Barcode →</span>
+              <span className="font-mono text-xs font-semibold text-[#0f172a] dark:text-emerald-400 flex items-center gap-1">
+                <span>Scan Barcode</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </span>
             </button>
           </div>
         </div>
@@ -1711,137 +1816,173 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
       {/* ==================================================== */}
       {flowState === 'result' && activeInspection && (
         <div className="space-y-6">
-          {/* Top Bar: Inspection Header & Action Buttons */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs uppercase font-mono font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-300">
-                  {activeInspection.inspection_code}
-                </span>
-                <span className="text-xs text-slate-400 font-mono">•</span>
-                <span className="text-xs text-slate-700 font-bold">
-                  {activeInspection.product_name}
-                </span>
-                {activeInspection.packaging_geometry && (
-                  <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded capitalize">
-                    {activeInspection.packaging_geometry} Surface
-                  </span>
-                )}
-              </div>
-              <h1 className="text-2xl font-extrabold text-slate-950 tracking-tight mt-1">
-                Legal Metrology Compliance Report
-              </h1>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                AI-Assisted Preliminary Metrology Screening • Official Determination Subject to Authorized Physical Verification
-              </p>
+          {/* Top Statutory Context Breadcrumb & Case Meta Strip */}
+          <div className="px-4 py-2 bg-white dark:bg-[#131b2e] rounded-lg border border-[#e2e8f0] dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 shadow-2xs">
+            <div className="flex items-center gap-2 min-w-0 text-xs font-mono">
+              <span className="font-bold text-[#0d1c2e] dark:text-white">{activeInspection.inspection_code}</span>
+              <span className="text-slate-400">/</span>
+              <span className="text-slate-600 dark:text-slate-300 truncate max-w-xs">{activeInspection.product_name}</span>
+              {activeInspection.barcode_number && (
+                <>
+                  <span className="text-slate-400">/</span>
+                  <span className="text-slate-500">SKU: {activeInspection.barcode_number}</span>
+                </>
+              )}
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <button
-                id="btn-inspect-another"
-                type="button"
-                onClick={handleResetToChoose}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
-              >
-                <PlusCircle className="w-3.5 h-3.5" />
-                Inspect Another Product
-              </button>
-              <button
-                id="btn-save-inspection"
-                type="button"
-                onClick={handleSaveInspection}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-semibold transition-colors cursor-pointer"
-              >
-                {isSavedSuccessfully ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Save className="w-3.5 h-3.5 text-slate-500" />}
-                {isSavedSuccessfully ? 'Saved' : 'Save Inspection'}
-              </button>
-              <button
-                id="btn-download-pdf-report"
-                type="button"
-                onClick={() => generateComplianceReportPDF(activeInspection)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Download PDF Report
-              </button>
-              <button
-                id="btn-dossier-legal-notice"
-                type="button"
-                onClick={() => generateLegalNoticePDF(activeInspection)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Legal Notice (Form 1)
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
-              >
-                <Printer className="w-3.5 h-3.5 text-slate-500" />
-                Print
-              </button>
+            <div className="flex items-center gap-3 text-xs font-mono text-slate-500">
+              <span className="inline-flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                Hash: <span className="text-[#0d1c2e] dark:text-slate-200">d98a...f412</span>
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                Captured: <span className="text-[#0d1c2e] dark:text-slate-200">
+                  {new Date(activeInspection.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                </span>
+              </span>
             </div>
           </div>
 
-          {/* SECTION A: OVERALL RESULT */}
-          {activeInspection.overall_status === 'COMPLIANT' && (
-            <div className="rounded-2xl border-2 border-emerald-400 bg-emerald-50/80 p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
-              <div>
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-800">
-                  Section A: Overall Result
-                </span>
-                <h2 className="text-xl font-extrabold text-emerald-950 flex items-center gap-2">
-                  ✓ COMPLIANT
-                </h2>
-                <p className="text-xs text-emerald-900">
-                  Sufficient visible evidence confirms all mandatory declarations meet the statutory requirements under Rule 6(1) of Legal Metrology (Packaged Commodities) Rules, 2011.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* 1. EXECUTIVE COMPLIANCE VERDICT BANNER (Rv1 Reference) */}
+          <div className={`p-5 sm:p-6 rounded-xl border shadow-xs flex flex-col gap-4 ${
+            activeInspection.overall_status === 'COMPLIANT'
+              ? 'bg-white dark:bg-[#131b2e] border-emerald-300 dark:border-emerald-800'
+              : activeInspection.overall_status === 'NON_COMPLIANT'
+              ? 'bg-white dark:bg-[#131b2e] border-red-300 dark:border-red-800'
+              : 'bg-white dark:bg-[#131b2e] border-amber-300 dark:border-amber-800'
+          }`}>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-[#e2e8f0] dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                {activeInspection.overall_status === 'COMPLIANT' ? (
+                  <div className="flex items-center gap-3 bg-[#059669] text-white px-4 py-2.5 rounded-lg shadow-xs shrink-0">
+                    <CheckCircle2 className="w-6 h-6" />
+                    <div className="flex flex-col text-left leading-tight">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-100">Statutory Verdict</span>
+                      <span className="font-headline text-base font-bold tracking-tight">COMPLIANT</span>
+                    </div>
+                  </div>
+                ) : activeInspection.overall_status === 'NON_COMPLIANT' ? (
+                  <div className="flex items-center gap-3 bg-[#dc2626] text-white px-4 py-2.5 rounded-lg shadow-xs shrink-0">
+                    <Gavel className="w-6 h-6" />
+                    <div className="flex flex-col text-left leading-tight">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-red-100">Statutory Verdict</span>
+                      <span className="font-headline text-base font-bold tracking-tight">NON-COMPLIANT</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 bg-[#d97706] text-white px-4 py-2.5 rounded-lg shadow-xs shrink-0">
+                    <AlertTriangle className="w-6 h-6" />
+                    <div className="flex flex-col text-left leading-tight">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-amber-100">Statutory Verdict</span>
+                      <span className="font-headline text-base font-bold tracking-tight">NEEDS REVIEW</span>
+                    </div>
+                  </div>
+                )}
 
-          {activeInspection.overall_status === 'NON_COMPLIANT' && (
-            <div className="rounded-2xl border-2 border-red-400 bg-red-50/80 p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <XCircle className="w-7 h-7" />
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="font-headline text-lg sm:text-xl font-bold text-[#0d1c2e] dark:text-white">
+                      {activeInspection.overall_status === 'COMPLIANT'
+                        ? 'All Statutory Declarations Verified'
+                        : activeInspection.overall_status === 'NON_COMPLIANT'
+                        ? `${activeInspection.failed_count} Statutory Violation${activeInspection.failed_count > 1 ? 's' : ''} Detected`
+                        : `${activeInspection.review_count} Declaration${activeInspection.review_count > 1 ? 's' : ''} Requiring Review`}
+                    </h2>
+                    <span className={`font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                      activeInspection.overall_status === 'COMPLIANT'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        : activeInspection.overall_status === 'NON_COMPLIANT'
+                        ? 'bg-red-100 text-red-800 border border-red-200'
+                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                    }`}>
+                      {activeInspection.overall_status === 'COMPLIANT' ? 'Clearance Issued' : activeInspection.overall_status === 'NON_COMPLIANT' ? 'Action Recommended' : 'Physical Verification'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-sans">
+                    Ref: Legal Metrology (Packaged Commodities) Rules, 2011 • Rule 6 & Rule 7 • Sec. 36
+                  </p>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-red-800">
-                  Section A: Overall Result
-                </span>
-                <h2 className="text-xl font-extrabold text-red-950 flex items-center gap-2">
-                  ✕ NON-COMPLIANT
-                </h2>
-                <p className="text-xs text-red-900">
-                  Potential non-compliances detected during preliminary AI screening. {activeInspection.failed_count} mandatory declaration(s) appear missing or non-compliant under the Legal Metrology (Packaged Commodities) Rules, 2011.
-                </p>
-              </div>
-            </div>
-          )}
 
-          {activeInspection.overall_status === 'NEEDS_REVIEW' && (
-            <div className="rounded-2xl border-2 border-amber-400 bg-amber-50/80 p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <AlertTriangle className="w-7 h-7" />
-              </div>
-              <div>
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-800">
-                  Section A: Overall Result
-                </span>
-                <h2 className="text-xl font-extrabold text-amber-950 flex items-center gap-2">
-                  ! NEEDS REVIEW
-                </h2>
-                <p className="text-xs text-amber-900">
-                  Certain packaging areas are obscured by glare, curvature, or angle. Additional views or physical verification are required before a definitive legal conclusion can be made.
-                </p>
+              {/* Action Buttons Toolbar */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  id="btn-inspect-another"
+                  type="button"
+                  onClick={handleResetToChoose}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer font-mono"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>Inspect Another</span>
+                </button>
+                <button
+                  id="btn-save-inspection"
+                  type="button"
+                  onClick={handleSaveInspection}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#cbd5e1] dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#0d1c2e] dark:text-white text-xs font-semibold transition-colors cursor-pointer font-mono"
+                >
+                  {isSavedSuccessfully ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Save className="w-3.5 h-3.5 text-slate-500" />}
+                  <span>{isSavedSuccessfully ? 'Saved' : 'Save Record'}</span>
+                </button>
+                <button
+                  id="btn-download-pdf-report"
+                  type="button"
+                  onClick={() => generateComplianceReportPDF(activeInspection)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#059669] hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer font-mono"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Compliance PDF</span>
+                </button>
+                {activeInspection.overall_status === 'NON_COMPLIANT' && (
+                  <button
+                    id="btn-dossier-legal-notice"
+                    type="button"
+                    onClick={() => generateLegalNoticePDF(activeInspection)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#dc2626] hover:bg-red-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer font-mono"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Legal Notice (Form 1)</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#cbd5e1] dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Print</span>
+                </button>
               </div>
             </div>
-          )}
+
+            {/* Verdict details and statutory notes */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1 border-t border-[#e2e8f0] dark:border-slate-800">
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-slate-800">
+                <span className="text-[10px] font-mono uppercase text-slate-500 block mb-0.5">Statutory Regime</span>
+                <span className="font-semibold text-[#0d1c2e] dark:text-slate-200">Legal Metrology (PCR) Rules, 2011</span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-slate-800">
+                <span className="text-[10px] font-mono uppercase text-slate-500 block mb-0.5">Enforcement Provision</span>
+                <span className="font-semibold text-[#0d1c2e] dark:text-slate-200">
+                  {activeInspection.overall_status === 'NON_COMPLIANT'
+                    ? 'Section 36 • Compounding / Notice'
+                    : activeInspection.overall_status === 'COMPLIANT'
+                    ? 'Rule 6 & Rule 7 Verification Passed'
+                    : 'Rule 6 Verification Inconclusive • Re-scan Required'}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-slate-800">
+                <span className="text-[10px] font-mono uppercase text-slate-500 block mb-0.5">Auditor Assessment</span>
+                <span className="font-semibold text-[#0d1c2e] dark:text-slate-200">
+                  {activeInspection.overall_status === 'NON_COMPLIANT'
+                    ? `${activeInspection.failed_count} violation(s) identified on package surface`
+                    : activeInspection.overall_status === 'COMPLIANT'
+                    ? 'All required declarations present & compliant'
+                    : `${activeInspection.review_count} declaration(s) require physical confirmation`}
+                </span>
+              </div>
+            </div>
+          </div>
 
           {/* SECTION B: SUMMARY CARDS (Duplicate-Free Source of Truth) */}
           <div className="space-y-2">

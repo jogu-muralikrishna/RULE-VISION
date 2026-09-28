@@ -60,125 +60,124 @@ export const InspectorPendingApprovalPage: React.FC<InspectorPendingApprovalPage
   };
 
   return (
-    <div className="min-h-screen bg-[#08090C] text-[#F5F5F7] flex flex-col justify-between selection:bg-[#FF2638] selection:text-white">
-      {/* Top Header */}
-      <header className="px-4 sm:px-8 py-3.5 flex items-center justify-between border-b border-[#292B34] bg-[#101116]/80 backdrop-blur-md sticky top-0 z-40">
-        <BrandLogo
-          size="md"
-          showSubtitle={true}
-          subtitle="AI-Powered Legal Metrology Compliance Inspection"
-        />
+    <div className="min-h-screen bg-[#f8f9ff] text-slate-800 flex flex-col justify-between selection:bg-slate-800 selection:text-white font-sans">
+      {/* Top Official Gazette Strip */}
+      <header className="bg-[#131b2e] text-slate-300 border-b border-slate-700/60 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
+          <BrandLogo
+            size="md"
+            showSubtitle={true}
+            subtitle="AI-Powered Legal Metrology Compliance Inspection"
+          />
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/60 border border-amber-800/80 text-[11px] font-semibold text-amber-300">
-            <Clock className="w-3.5 h-3.5 animate-spin" />
-            Verification Pending
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-amber-950/60 border border-amber-700/60 text-[11px] font-mono font-medium text-amber-300">
+              <Clock className="w-3.5 h-3.5 animate-spin" />
+              <span>CLEARANCE PENDING</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:border-slate-500 transition-colors text-xs font-semibold cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={onLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#292B34] bg-[#14151B] text-[#A5A7B0] hover:text-white hover:border-red-500/50 transition-colors text-xs font-semibold cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
         </div>
       </header>
 
       {/* Main Verification Dossier */}
       <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex items-center justify-center">
-        <div className="w-full bg-[#14151B] rounded-2xl border border-[#292B34] shadow-2xl p-6 sm:p-8 space-y-6 relative overflow-hidden">
-          {/* Ambient Amber Glow */}
-          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
+        <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
           {/* Status Badge & Header */}
-          <div className="space-y-2 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-400">
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Inspector Access Request Submitted</span>
+          <div className="space-y-2 text-center sm:text-left border-b border-slate-100 pb-4">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-xs font-mono font-bold text-amber-800">
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-700" />
+              <span>STATUTORY DOSSIER SUBMITTED • AWAITING CLEARANCE</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Application Under Administrative Review
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-display">
+              Officer Application Under Review
             </h1>
 
-            <p className="text-sm text-[#A5A7B0] leading-relaxed max-w-xl">
-              Thank you for registering your enforcement credentials. To maintain statutory integrity under the Legal Metrology Act, all inspector privileges are subject to administrator verification before access is granted.
+            <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
+              Thank you for registering your enforcement credentials. Under the Legal Metrology Act, 2009, all inspector privileges are subject to administrator verification before access is granted.
             </p>
           </div>
 
           {/* Feedback Toast */}
           {feedbackMessage && (
-            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[#1A1B22] border border-amber-500/40 text-amber-200 text-xs shadow-md">
-              <BadgeAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+              <BadgeAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
               <span>{feedbackMessage}</span>
             </div>
           )}
 
           {/* Submitted Information Card */}
-          <div className="p-4 sm:p-5 rounded-xl bg-[#0F1015] border border-[#292B34] space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-[#20222B]">
-              <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-[#FF2638]" />
+          <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5 font-display">
+                <User className="w-3.5 h-3.5 text-slate-700" />
                 Submitted Officer Profile
               </span>
-              <span className="text-[10px] text-amber-400 font-semibold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80">
-                Status: Pending
+              <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                STATUS: PENDING VERIFICATION
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-2.5 rounded-lg bg-[#14151B] border border-[#20222B]">
-                <span className="text-[10px] text-[#71737E] uppercase tracking-wider block font-semibold">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">
                   Full Name
                 </span>
-                <span className="font-semibold text-white truncate block mt-0.5">
+                <span className="font-semibold text-slate-900 truncate block mt-0.5">
                   {currentUser.full_name || 'Not Provided'}
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#14151B] border border-[#20222B]">
-                <span className="text-[10px] text-[#71737E] uppercase tracking-wider block font-semibold">
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">
                   Registered Email
                 </span>
-                <span className="font-semibold text-white truncate block mt-0.5">
+                <span className="font-semibold text-slate-900 truncate block mt-0.5 font-mono">
                   {currentUser.email}
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#14151B] border border-[#20222B]">
-                <span className="text-[10px] text-[#71737E] uppercase tracking-wider block font-semibold flex items-center gap-1">
-                  <span>Inspector ID / Badge</span>
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">
+                  Inspector ID / Badge
                 </span>
-                <span className="font-semibold text-emerald-400 font-mono tracking-wider block mt-0.5">
+                <span className="font-semibold text-slate-900 font-mono tracking-wider block mt-0.5">
                   {currentUser.inspector_id || 'Pending submission'}
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#14151B] border border-[#20222B]">
-                <span className="text-[10px] text-[#71737E] uppercase tracking-wider block font-semibold flex items-center gap-1">
-                  <Building2 className="w-3 h-3 text-[#A5A7B0]" />
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider block flex items-center gap-1">
+                  <Building2 className="w-3 h-3 text-slate-500" />
                   <span>Department</span>
                 </span>
-                <span className="font-semibold text-white truncate block mt-0.5">
+                <span className="font-semibold text-slate-900 truncate block mt-0.5">
                   {currentUser.department || 'Department of Legal Metrology'}
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#14151B] border border-[#20222B]">
-                <span className="text-[10px] text-[#71737E] uppercase tracking-wider block font-semibold flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-[#A5A7B0]" />
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider block flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-slate-500" />
                   <span>Jurisdiction</span>
                 </span>
-                <span className="font-semibold text-white truncate block mt-0.5">
+                <span className="font-semibold text-slate-900 truncate block mt-0.5">
                   {currentUser.district ? `${currentUser.district}, ${currentUser.state}` : (currentUser.state || 'India')}
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#14151B] border border-[#20222B]">
-                <span className="text-[10px] text-[#71737E] uppercase tracking-wider block font-semibold flex items-center gap-1">
-                  <FileText className="w-3 h-3 text-[#A5A7B0]" />
+              <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider block flex items-center gap-1">
+                  <FileText className="w-3 h-3 text-slate-500" />
                   <span>Supporting Document</span>
                 </span>
                 {currentUser.supporting_document_path ? (
@@ -186,12 +185,12 @@ export const InspectorPendingApprovalPage: React.FC<InspectorPendingApprovalPage
                     href={currentUser.supporting_document_path}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-[#FF2638] hover:text-[#FF4D5E] font-semibold flex items-center gap-1 mt-0.5"
+                    className="text-xs text-slate-800 hover:text-slate-950 font-semibold flex items-center gap-1 mt-0.5 underline"
                   >
                     View Document <ExternalLink className="w-3 h-3" />
                   </a>
                 ) : (
-                  <span className="font-semibold text-[#71737E] block mt-0.5">
+                  <span className="font-semibold text-slate-400 block mt-0.5 font-mono text-[11px]">
                     None Attached
                   </span>
                 )}
@@ -200,25 +199,25 @@ export const InspectorPendingApprovalPage: React.FC<InspectorPendingApprovalPage
           </div>
 
           {/* Verification Protocol Explainer */}
-          <div className="p-4 rounded-xl bg-[#101116] border border-[#292B34] space-y-2 text-xs text-[#A5A7B0]">
-            <h2 className="font-bold text-white text-xs flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5 text-xs text-slate-600">
+            <h2 className="font-bold text-slate-900 text-xs flex items-center gap-1.5 font-display">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               What happens next?
             </h2>
-            <ul className="list-disc list-inside space-y-1 text-[11px] leading-relaxed pl-1 text-[#8F919E]">
+            <ul className="list-disc list-inside space-y-1 text-[11px] leading-relaxed pl-1 text-slate-500">
               <li>The Legal Metrology Administrator verifies your department ID against the state enforcement roster.</li>
-              <li>Once verified, your account is upgraded to the full <strong className="text-white">Inspector Suite</strong>, enabling official penalty calculations, compounding notice generation, and court-ready dossiers.</li>
-              <li>Review typically completes within <strong className="text-white">24-48 business hours</strong>.</li>
+              <li>Once verified, your account is upgraded to the full <strong className="text-slate-800">Inspector Enforcement Suite</strong>.</li>
+              <li>Verification is typically reviewed within <strong className="text-slate-800 font-mono">24-48 business hours</strong>.</li>
             </ul>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
             <button
               type="button"
               onClick={handleRefreshStatus}
               disabled={refreshing}
-              className="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-[#FF2638] hover:bg-[#B51226] text-white text-xs font-bold shadow-lg shadow-[#FF2638]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full sm:w-1/2 py-2.5 px-4 rounded-lg bg-[#131b2e] hover:bg-[#1e293b] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               {refreshing ? 'Checking Status...' : 'Refresh Status'}
@@ -227,24 +226,24 @@ export const InspectorPendingApprovalPage: React.FC<InspectorPendingApprovalPage
             <button
               type="button"
               onClick={onContinueToConsumer}
-              className="w-full sm:w-1/2 py-3 px-4 rounded-xl border border-[#292B34] bg-[#1B1C23] hover:bg-[#22242D] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-1/2 py-2.5 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
             >
-              <span>Continue to Consumer Dashboard</span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#A5A7B0]" />
+              <span>Continue to Consumer Workspace</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
             </button>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="py-4 px-4 sm:px-8 border-t border-[#292B34] bg-[#101116]/80 text-center text-xs text-[#A5A7B0] flex flex-col sm:flex-row items-center justify-between gap-2">
+      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 bg-white text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-white">RuleVision</span>
+          <span className="font-bold text-slate-800 font-display">RuleVision</span>
           <span>•</span>
           <span>Legal Metrology Verification Service</span>
         </div>
-        <div className="text-[11px] text-[#71737E]">
-          National Legal Metrology Portal Integration
+        <div className="text-[11px] text-slate-400 font-mono">
+          DIRECTORATE OF LEGAL METROLOGY • VERIFICATION DESK
         </div>
       </footer>
     </div>

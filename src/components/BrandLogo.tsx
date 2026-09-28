@@ -61,20 +61,16 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       className={`inline-flex items-center ${config.container} select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
-      {/* Official RuleVision Shield Emblem with Red Neon Checkmark & Metallic Barcode */}
+      {/* Official RuleVision Shield Emblem */}
       <div className="relative shrink-0 flex items-center justify-center">
         <div
-          className={`${config.box} overflow-hidden rounded-xl bg-[#08090C] border border-[#292B34] shadow-md transition-transform duration-200 hover:scale-105`}
-          style={{
-            boxShadow: '0 0 16px -2px rgba(255, 38, 56, 0.25)'
-          }}
+          className={`${config.box} overflow-hidden rounded-lg bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-700 shadow-xs transition-transform duration-200 hover:scale-105 flex items-center justify-center`}
         >
           <img
             src="/assets/rulevision_logo.png"
             alt="RuleVision Logo"
             className={`${config.img} object-contain p-0.5`}
             onError={(e) => {
-              // Fallback to local relative asset path if served without root public dir
               const target = e.target as HTMLImageElement;
               if (!target.src.includes('./assets/')) {
                 target.src = './assets/rulevision_logo.png';
@@ -84,16 +80,16 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         </div>
       </div>
 
-      {/* Brand Wordmark & Descriptor (if not onlyEmblem) */}
+      {/* Brand Wordmark & Descriptor */}
       {!onlyEmblem && (
         <div className="flex flex-col text-left">
           <div className="flex items-center gap-1.5 leading-none">
-            <span className={`font-black tracking-tight text-slate-950 dark:text-white ${config.title}`}>
-              Rule<span className="text-[#FF2638]">Vision</span>
+            <span className={`font-headline font-bold tracking-tight text-[#0d1c2e] dark:text-white ${config.title}`}>
+              Rule<span className="text-red-600 dark:text-red-400">Vision</span>
             </span>
             {badge && (
               <span
-                className={`font-bold uppercase tracking-wider rounded-md bg-[#1B1C23] text-[#F5F5F7] border border-[#292B34] ${config.badgeText}`}
+                className={`font-mono font-semibold uppercase tracking-wider rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 ${config.badgeText}`}
               >
                 {badge}
               </span>
@@ -101,7 +97,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           </div>
 
           {showSubtitle && (
-            <span className={`font-semibold tracking-wide text-slate-500 dark:text-[#A5A7B0] mt-1 ${config.subText}`}>
+            <span className={`font-sans font-medium text-slate-500 dark:text-slate-400 mt-1 leading-tight ${config.subText}`}>
               {subtitle}
             </span>
           )}

@@ -3,41 +3,118 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-noir-950: #08090C;
-  --color-noir-900: #101116;
-  --color-noir-850: #14151B;
-  --color-noir-800: #1B1C23;
-  --color-noir-700: #292B34;
-  --color-crimson-500: #FF2638;
-  --color-crimson-600: #E61E30;
-  --color-crimson-700: #B51226;
-  --color-noir-text-primary: #F5F5F7;
-  --color-noir-text-secondary: #A5A7B0;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-headline: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-tabular: 'JetBrains Mono', monospace;
+
+  /* Statutory Legal Metrology Palette */
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #ccdbf3;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e6eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d5e3fc;
+  --color-surface-variant: #d5e3fc;
+  
+  --color-on-surface: #0d1c2e;
+  --color-on-surface-variant: #45464d;
+  --color-inverse-surface: #233144;
+  --color-inverse-on-surface: #eaf1ff;
+
+  --color-primary: #0f172a;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #131b2e;
+  --color-on-primary-container: #7c839b;
+  --color-primary-fixed: #dae2fd;
+  --color-primary-fixed-dim: #bec6e0;
+  --color-on-primary-fixed: #131b2e;
+  --color-on-primary-fixed-variant: #3f465c;
+
+  --color-secondary: #545f73;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d5e0f8;
+  --color-on-secondary-container: #586377;
+  --color-secondary-fixed: #d8e3fb;
+  --color-secondary-fixed-dim: #bcc7de;
+  --color-on-secondary-fixed: #111c2d;
+  --color-on-secondary-fixed-variant: #3c475a;
+
+  --color-tertiary-container: #002114;
+  --color-on-tertiary-container: #069669;
+  --color-tertiary-fixed: #85f8c4;
+  --color-tertiary-fixed-dim: #68dba9;
+  --color-on-tertiary-fixed: #002114;
+  --color-on-tertiary-fixed-variant: #005137;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Backward compatibility for existing components */
+  --color-noir-950: #0f172a;
+  --color-noir-900: #1e293b;
+  --color-noir-850: #334155;
+  --color-noir-800: #475569;
+  --color-noir-700: #64748b;
+  --color-crimson-500: #dc2626;
+  --color-crimson-600: #b91c1c;
+  --color-crimson-700: #991b1b;
+  --color-noir-text-primary: #0d1c2e;
+  --color-noir-text-secondary: #545f73;
 }
 
-/* Red Noir Ambient Glow Utilities */
-.glow-crimson {
-  box-shadow: 0 0 25px -5px rgba(255, 38, 56, 0.25);
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background-color: #f8f9ff;
+    color: #0d1c2e;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headline);
+  }
 }
 
-.glow-crimson-sm {
-  box-shadow: 0 0 15px -3px rgba(255, 38, 56, 0.20);
+/* Custom spacing helpers */
+.px-margin-desktop {
+  padding-left: clamp(1rem, 2vw, 2rem);
+  padding-right: clamp(1rem, 2vw, 2rem);
 }
 
-.glow-crimson-lg {
-  box-shadow: 0 0 40px -8px rgba(255, 38, 56, 0.35);
+.p-margin-desktop {
+  padding: clamp(1rem, 2vw, 2rem);
 }
 
-.border-crimson-glow {
-  border-color: rgba(255, 38, 56, 0.4);
-  box-shadow: 0 0 15px -3px rgba(255, 38, 56, 0.25);
-}
+.gap-space-xs { gap: 0.25rem; }
+.gap-space-sm { gap: 0.5rem; }
+.gap-space-md { gap: 0.75rem; }
+.gap-space-lg { gap: 1.25rem; }
+.gap-space-xl { gap: 2rem; }
 
-/* Background Gradients */
-.bg-radial-crimson {
-  background: radial-gradient(circle at 50% 0%, rgba(181, 18, 38, 0.18) 0%, rgba(8, 9, 12, 0) 70%);
-}
+.p-space-xs { padding: 0.25rem; }
+.p-space-sm { padding: 0.5rem; }
+.p-space-md { padding: 0.75rem; }
+.p-space-lg { padding: 1.25rem; }
+.p-space-xl { padding: 2rem; }
 
+.py-space-xs { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-space-sm { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-space-md { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.py-space-lg { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+
+.px-space-xs { padding-left: 0.25rem; padding-right: 0.25rem; }
+.px-space-sm { padding-left: 0.5rem; padding-right: 0.5rem; }
+.px-space-md { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-space-lg { padding-left: 1.25rem; padding-right: 1.25rem; }
+
+/* Subtle laser scanner animation */
 @keyframes scanlaser {
   0% {
     top: 2%;
@@ -55,4 +132,10 @@
 
 .animate-scanlaser {
   animation: scanlaser 2.2s ease-in-out infinite;
+}
+
+/* Material Symbols sizing utility */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
 }
