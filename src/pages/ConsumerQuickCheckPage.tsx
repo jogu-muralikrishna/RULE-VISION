@@ -748,11 +748,15 @@ export const ConsumerQuickCheckPage: React.FC<ConsumerQuickCheckPageProps> = ({
       </main>
 
       {/* Clean Footer */}
-      <footer className="mt-auto border-t border-[#e2e8f0] dark:border-slate-800 py-4 px-4 text-center text-xs text-slate-500">
-        <p className="font-bold text-[#0d1c2e] dark:text-slate-300 tracking-tight font-mono">
-          RULEVISION • STATUTORY VERIFICATION
-        </p>
-        <p className="text-[11px] mt-0.5">AI-Powered Legal Metrology Compliance Auditor • Packaged Commodities 2011</p>
+      <footer className="mt-auto border-t border-[#e2e8f0] dark:border-slate-800 bg-white dark:bg-[#131b2e] py-3.5 px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-4xl mx-auto w-full">
+        <div className="flex items-center gap-2.5">
+          <BrandLogo size="xs" showSubtitle={false} />
+          <span className="text-slate-400">•</span>
+          <span>Legal Metrology Citizen Screening Portal</span>
+        </div>
+        <div className="text-[11px] text-slate-400 font-mono">
+          Legal Metrology Act, 2009 • Packaged Commodities Rules 2011
+        </div>
       </footer>
 
       {/* Inspector Access Re-application Modal */}

@@ -62,8 +62,8 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-slate-800 flex flex-col justify-between selection:bg-slate-800 selection:text-white font-sans">
-      {/* Top Official Gazette Strip */}
-      <header className="bg-[#131b2e] text-slate-300 border-b border-slate-700/60 sticky top-0 z-40">
+      {/* Top Official Gazette Header */}
+      <header className="bg-white dark:bg-[#131b2e] text-slate-800 dark:text-slate-200 border-b border-[#e2e8f0] dark:border-slate-800 sticky top-0 z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
           <BrandLogo
             size="md"
@@ -76,7 +76,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
             <button
               type="button"
               onClick={onBackToMainLogin}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-700 bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white hover:border-slate-500 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Standard Portal Login</span>
@@ -85,10 +85,10 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
             <button
               type="button"
               onClick={onToggleTheme}
-              className="p-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
           </div>
         </div>
@@ -198,8 +198,15 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 bg-white text-center text-xs text-slate-500">
-        RuleVision Administrative Control Console • Legal Metrology Act, 2009 &amp; PCR 2011
+      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <BrandLogo size="xs" showSubtitle={false} />
+          <span className="text-slate-400">•</span>
+          <span>RuleVision Administrative Control Console</span>
+        </div>
+        <div className="font-mono text-[11px] text-slate-400">
+          Legal Metrology Act, 2009 &amp; PCR 2011
+        </div>
       </footer>
     </div>
   );

@@ -208,28 +208,28 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-slate-800 flex flex-col justify-between selection:bg-slate-800 selection:text-white font-sans">
-      {/* Top Official Gazette Strip */}
-      <header className="bg-[#131b2e] text-slate-300 border-b border-slate-700/60 sticky top-0 z-40">
+      {/* Top Official Gazette Header */}
+      <header className="bg-white dark:bg-[#131b2e] text-slate-800 dark:text-slate-200 border-b border-[#e2e8f0] dark:border-slate-800 sticky top-0 z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
           <BrandLogo
             size="md"
             showSubtitle={true}
-            subtitle="AI-Powered Legal Metrology Compliance Inspection"
+            subtitle="Legal Metrology Compliance System (LM-Rules 6 & 7)"
           />
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700 text-[11px] font-mono font-medium text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-md bg-[#eff4ff] dark:bg-slate-800 border border-[#dce9ff] dark:border-slate-700 text-[11px] font-mono font-medium text-slate-700 dark:text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>STATUTORY ACT 2009 &amp; PCR 2011</span>
             </div>
 
             <button
               type="button"
               onClick={onToggleTheme}
-              className="p-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
           </div>
         </div>
@@ -892,10 +892,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 bg-white text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-800 font-display">RuleVision</span>
-          <span>•</span>
+      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <BrandLogo size="xs" showSubtitle={false} />
+          <span className="text-slate-400">•</span>
           <span>Legal Metrology Statutory Screening Platform</span>
         </div>
         <div className="text-[11px] text-slate-400 font-mono">

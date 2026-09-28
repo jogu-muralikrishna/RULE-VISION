@@ -92,16 +92,16 @@ export const AppShell: React.FC<AppShellProps> = ({
   return (
     <div className="min-h-screen bg-[#f8f9ff] dark:bg-[#0a0f1d] text-[#0d1c2e] dark:text-[#f8f9ff] flex flex-col antialiased">
       {/* 1. TOP STATUTORY LEGAL METROLOGY CONTEXT STRIP */}
-      <div id="statutory-disclaimer-banner" className="bg-[#131b2e] text-slate-300 text-[11px] px-4 sm:px-6 py-1.5 flex items-center justify-between border-b border-slate-800 z-50">
+      <div id="statutory-disclaimer-banner" className="bg-[#eff4ff] dark:bg-[#131b2e] text-slate-700 dark:text-slate-300 text-[11px] px-4 sm:px-6 py-1.5 flex items-center justify-between border-b border-[#dce9ff] dark:border-slate-800 z-50">
         <div className="flex items-center gap-2 max-w-[1600px] mx-auto w-full justify-between">
           <div className="flex items-center gap-2 truncate">
-            <Gavel className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="font-mono uppercase tracking-wider text-[10px] sm:text-[11px] text-slate-300 truncate">
+            <Gavel className="w-3.5 h-3.5 text-slate-700 dark:text-emerald-400 shrink-0" />
+            <span className="font-mono uppercase tracking-wider text-[10px] sm:text-[11px] text-slate-700 dark:text-slate-300 truncate font-semibold">
               Statutory Legal Metrology Enforcement Framework • Legal Metrology (Packaged Commodities) Rules 2011
             </span>
           </div>
-          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-emerald-400 uppercase tracking-widest shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 uppercase tracking-widest shrink-0 font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>LIVE AUDIT TRAIL LOGGING (SECTION 36 READY)</span>
           </div>
         </div>
@@ -336,6 +336,14 @@ export const AppShell: React.FC<AppShellProps> = ({
         {/* Desktop Sidebar (Rv2 / Rv4 inspired) */}
         <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-[#131b2e] border-r border-[#e2e8f0] dark:border-slate-800 p-4 shrink-0 justify-between">
           <div className="flex flex-col gap-4">
+            {/* Sidebar Brand Header */}
+            <div className="pb-3 border-b border-[#e2e8f0] dark:border-slate-800 flex items-center justify-between">
+              <BrandLogo size="sm" showSubtitle={false} />
+              <span className="font-mono text-[9px] uppercase tracking-wider text-slate-400 font-bold bg-[#eff4ff] dark:bg-slate-800 px-1.5 py-0.5 rounded border border-[#dce9ff] dark:border-slate-700">
+                LM-2011
+              </span>
+            </div>
+
             {/* Inspection Session Registry Card */}
             <div className="p-3 bg-[#eff4ff] dark:bg-slate-800/70 rounded-lg border border-[#dce9ff] dark:border-slate-700">
               <div className="font-mono text-[10px] uppercase text-slate-500 dark:text-slate-400 font-bold tracking-wider">
@@ -405,14 +413,14 @@ export const AppShell: React.FC<AppShellProps> = ({
           {children}
 
           {/* Professional Footer */}
-          <footer className="mt-16 pt-6 pb-4 border-t border-[#e2e8f0] dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-slate-400" />
-              <span className="font-headline font-bold text-slate-700 dark:text-slate-300">RuleVision</span>
-              <span>• Legal Metrology (Packaged Commodities) Compliance System</span>
+          <footer className="mt-16 pt-6 pb-4 border-t border-[#e2e8f0] dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <BrandLogo size="xs" showSubtitle={false} />
+              <span className="text-slate-400">•</span>
+              <span>Legal Metrology (Packaged Commodities) Compliance System</span>
             </div>
             <div className="font-mono text-[11px] text-slate-400">
-              LM Act 2009 • GSR 427(E) Gazette Rules 6 & 7 Compliant
+              LM Act 2009 • GSR 427(E) Gazette Rules 6 &amp; 7 Compliant
             </div>
           </footer>
         </main>

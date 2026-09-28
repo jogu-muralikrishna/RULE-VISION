@@ -61,25 +61,25 @@ export const InspectorPendingApprovalPage: React.FC<InspectorPendingApprovalPage
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-slate-800 flex flex-col justify-between selection:bg-slate-800 selection:text-white font-sans">
-      {/* Top Official Gazette Strip */}
-      <header className="bg-[#131b2e] text-slate-300 border-b border-slate-700/60 sticky top-0 z-40">
+      {/* Top Official Gazette Header */}
+      <header className="bg-white dark:bg-[#131b2e] text-slate-800 dark:text-slate-200 border-b border-[#e2e8f0] dark:border-slate-800 sticky top-0 z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
           <BrandLogo
             size="md"
             showSubtitle={true}
-            subtitle="AI-Powered Legal Metrology Compliance Inspection"
+            subtitle="Legal Metrology Compliance System (LM-Rules 6 & 7)"
           />
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-amber-950/60 border border-amber-700/60 text-[11px] font-mono font-medium text-amber-300">
-              <Clock className="w-3.5 h-3.5 animate-spin" />
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 text-[11px] font-mono font-medium text-amber-800 dark:text-amber-300">
+              <Clock className="w-3.5 h-3.5 animate-spin text-amber-600 dark:text-amber-400" />
               <span>CLEARANCE PENDING</span>
             </div>
 
             <button
               type="button"
               onClick={onLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:border-slate-500 transition-colors text-xs font-semibold cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-colors text-xs font-semibold cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -236,10 +236,10 @@ export const InspectorPendingApprovalPage: React.FC<InspectorPendingApprovalPage
       </main>
 
       {/* Footer */}
-      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 bg-white text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-800 font-display">RuleVision</span>
-          <span>•</span>
+      <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <BrandLogo size="xs" showSubtitle={false} />
+          <span className="text-slate-400">•</span>
           <span>Legal Metrology Verification Service</span>
         </div>
         <div className="text-[11px] text-slate-400 font-mono">

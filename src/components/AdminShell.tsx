@@ -73,16 +73,16 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   return (
     <div className="min-h-screen bg-[#f8f9ff] dark:bg-[#0a0f1d] text-[#0d1c2e] dark:text-[#f8f9ff] flex flex-col antialiased">
       {/* 1. TOP STATUTORY BAR */}
-      <div className="bg-[#131b2e] text-slate-300 text-[11px] px-4 sm:px-6 py-1.5 flex items-center justify-between border-b border-slate-800 z-50">
+      <div className="bg-[#eff4ff] dark:bg-[#131b2e] text-slate-700 dark:text-slate-300 text-[11px] px-4 sm:px-6 py-1.5 flex items-center justify-between border-b border-[#dce9ff] dark:border-slate-800 z-50">
         <div className="flex items-center gap-2 max-w-[1680px] mx-auto w-full justify-between">
           <div className="flex items-center gap-2 truncate">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="font-mono uppercase tracking-wider text-[10px] sm:text-[11px] text-slate-300 truncate">
-              RuleVision Master Administration Console • State & Federal Metrology Directorate
+            <ShieldCheck className="w-3.5 h-3.5 text-slate-700 dark:text-emerald-400 shrink-0" />
+            <span className="font-mono uppercase tracking-wider text-[10px] sm:text-[11px] text-slate-700 dark:text-slate-300 truncate font-semibold">
+              RuleVision Master Administration Console • State &amp; Federal Metrology Directorate
             </span>
           </div>
-          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-emerald-400 uppercase tracking-widest shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 uppercase tracking-widest shrink-0 font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>SECURE AUTHORITY NODE: ACTIVE</span>
           </div>
         </div>
@@ -183,6 +183,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-[#131b2e] border-r border-[#e2e8f0] dark:border-slate-800 p-4 shrink-0 justify-between">
           <div className="flex flex-col gap-4">
+            {/* Sidebar Brand Header */}
+            <div className="pb-3 border-b border-[#e2e8f0] dark:border-slate-800 flex items-center justify-between">
+              <BrandLogo size="sm" badge="ADMIN" showSubtitle={false} />
+            </div>
+
             <div className="p-3 bg-[#eff4ff] dark:bg-slate-800/70 rounded-lg border border-[#dce9ff] dark:border-slate-700">
               <div className="font-mono text-[10px] uppercase text-slate-500 dark:text-slate-400 font-bold tracking-wider">
                 System Context
@@ -239,6 +244,18 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         {/* Main Content Area */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           {children}
+
+          {/* Professional Admin Footer */}
+          <footer className="mt-16 pt-6 pb-4 border-t border-[#e2e8f0] dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <BrandLogo size="xs" showSubtitle={false} />
+              <span className="text-slate-400">•</span>
+              <span>Master Administration &amp; Regulatory Verification Portal</span>
+            </div>
+            <div className="font-mono text-[11px] text-slate-400">
+              Legal Metrology Act, 2009 &amp; PCR 2011 Administrative Directorate
+            </div>
+          </footer>
         </main>
       </div>
     </div>

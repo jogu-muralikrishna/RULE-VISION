@@ -127,12 +127,16 @@ export const ModeSelectionScreen: React.FC<ModeSelectionScreenProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="text-center text-xs text-slate-400 dark:text-slate-500 py-4 border-t border-slate-200 dark:border-slate-900 max-w-4xl mx-auto w-full">
-        <p className="font-semibold text-slate-600 dark:text-slate-400">RuleVision</p>
-        <p className="text-[11px] mt-0.5">
-          Legal Metrology (Packaged Commodities) Rules, 2011 Automated Auditor
-        </p>
-      </div>
+      <footer className="py-4 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 max-w-4xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <BrandLogo size="xs" showSubtitle={false} />
+          <span className="text-slate-400">•</span>
+          <span>Legal Metrology Automated Compliance Auditor</span>
+        </div>
+        <div className="text-[11px] text-slate-400 font-mono">
+          Legal Metrology Act, 2009 &amp; PCR 2011
+        </div>
+      </footer>
     </div>
   );
 };
