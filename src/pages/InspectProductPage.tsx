@@ -146,7 +146,7 @@ const PIPELINE_STAGES = [
   'Checking image quality',
   'Detecting package and label regions',
   'Correcting perspective / visible curvature',
-  'Extracting text using OCR / Vision AI',
+  'Extracting package text and declarations',
   'Identifying product declarations',
   'Evaluating applicable Legal Metrology rules',
   'Preparing the inspection report'
@@ -927,7 +927,7 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Automatic PDP boundary segmentation engine engaged. Full forensic OCR fallback operates without invalidating evidentiary chain-of-custody.
+                  Automatic PDP boundary segmentation engine engaged. High-precision declaration extraction operates with full evidentiary integrity.
                 </p>
               </div>
             </div>
@@ -1037,7 +1037,7 @@ export const InspectProductPage: React.FC<InspectProductPageProps> = ({
                   Single Specimen Protocol:
                 </span>
                 <span className="text-slate-600 dark:text-slate-300">
-                  Only one active inspection image is analyzed at a time to maintain statutory evidentiary integrity. Active image is processed for Principal Display Panel (PDP) detection, OCR attribute extraction, Rule 6 checks, and Rule 7 font standards.
+                  Only one active inspection image is analyzed at a time to maintain statutory evidentiary integrity. Active image is processed for Principal Display Panel (PDP) detection, text extraction, Rule 6 checks, and Rule 7 font standards.
                 </span>
               </div>
             </div>

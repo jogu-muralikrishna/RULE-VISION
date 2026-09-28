@@ -170,7 +170,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     if (res.success) {
       setActionFeedback({
         type: 'success',
-        message: 'Supabase credentials updated. Connection refreshed.'
+        message: 'Database credentials updated. Connection refreshed.'
       });
       handleTestConnection();
       loadAllData();
@@ -459,11 +459,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800 text-[10px] font-mono font-bold text-blue-700 dark:text-blue-300 mb-1.5 uppercase">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Supabase Live Statistics Hub</span>
+                <span>System Database Intelligence Hub</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-headline font-bold text-[#0d1c2e] dark:text-white">RuleVision System Overview</h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Real-time compliance intelligence calculated directly from active Supabase database records.
+                Real-time compliance intelligence calculated directly from active system database records.
               </p>
             </div>
 
@@ -475,15 +475,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#cbd5e1] dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-[#0d1c2e] dark:text-white text-xs font-mono font-bold transition-colors cursor-pointer shadow-2xs"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-                <span>Sync Supabase Data</span>
+                <span>Refresh System Data</span>
               </button>
             </div>
           </div>
 
-          {/* Section 5: Top Statistics Grid (All from Supabase) */}
+          {/* Section 5: Top Statistics Grid (All from System Database) */}
           <div className="space-y-3">
             <h2 className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              User & Officer Authorizations (Supabase profiles)
+              User &amp; Officer Authorizations (User Profiles)
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className="p-4 rounded-xl bg-white dark:bg-[#131b2e] border border-[#e2e8f0] dark:border-slate-800 shadow-2xs space-y-1">
@@ -513,7 +513,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 shadow-2xs space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Approved Officers</span>
                 <p className="text-2xl font-headline font-bold text-emerald-900 dark:text-emerald-300">{approvedInspectors}</p>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Verified & Active</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Verified &amp; Active</span>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-[#e2e8f0] dark:border-slate-800 shadow-2xs space-y-1">
@@ -524,10 +524,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </div>
           </div>
 
-          {/* Section 5: Scan Results Statistics (All from Supabase inspections) */}
+          {/* Section 5: Scan Results Statistics (All from system inspections registry) */}
           <div className="space-y-3 pt-2">
             <h2 className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Inspection & Scan Results (Supabase inspections)
+              Inspection &amp; Scan Results (Inspection Registry)
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-4 rounded-xl bg-white dark:bg-[#131b2e] border border-[#e2e8f0] dark:border-slate-800 shadow-2xs space-y-1">
@@ -589,7 +589,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <h3 className="text-sm font-bold text-[#0d1c2e] dark:text-white group-hover:text-blue-600 transition-colors">
                 Review Stored Scans →
               </h3>
-              <p className="text-xs text-slate-500 mt-1">Inspect OCR extractions, statutory Rule 6 findings, and evidence.</p>
+              <p className="text-xs text-slate-500 mt-1">Inspect extracted declarations, statutory Rule 6 findings, and evidence.</p>
             </button>
 
             <button
@@ -737,7 +737,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                             <option value="admin">Admin</option>
                           </select>
 
-                          {u.email !== 'admin@iare.com' && (
+                          {u.role !== 'admin' && (
                             <button
                               type="button"
                               onClick={() => setDeleteTarget({ id: u.id, name: u.email, type: 'user' })}
@@ -1224,7 +1224,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       )}
 
       {/* ========================================================
-          7. SYSTEM DATA (SUPABASE EXPLORER)
+          7. SYSTEM DATA (DATABASE EXPLORER)
       ======================================================== */}
       {activeSection === 'system' && (
         <div className="space-y-4">
@@ -1305,35 +1305,35 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       )}
 
       {/* ========================================================
-          8. SETTINGS & SUPABASE CONFIG
+          8. SETTINGS & DATABASE CONFIG
       ======================================================== */}
       {activeSection === 'settings' && (
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="p-6 rounded-xl bg-white dark:bg-[#131b2e] border border-[#cbd5e1] dark:border-slate-800 space-y-4 shadow-2xs">
             <div className="flex items-center gap-2 border-b border-[#e2e8f0] dark:border-slate-800 pb-3">
               <Database className="w-5 h-5 text-blue-600" />
-              <h2 className="text-base font-bold text-[#0d1c2e] dark:text-white">Supabase Cloud Database Settings</h2>
+              <h2 className="text-base font-bold text-[#0d1c2e] dark:text-white">System Database Settings</h2>
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">Supabase Project URL</label>
+                <label className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">Database Endpoint URL</label>
                 <input
                   type="text"
                   value={configUrl}
                   onChange={(e) => setConfigUrl(e.target.value)}
-                  placeholder="https://your-project.supabase.co"
+                  placeholder="https://database.agency.gov"
                   className="w-full px-3.5 py-2.5 rounded-lg border border-[#cbd5e1] dark:border-slate-700 bg-white dark:bg-slate-800 text-[#0d1c2e] dark:text-white text-xs font-mono focus:outline-none focus:border-[#0f172a]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">Supabase Public Anon Key</label>
+                <label className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">Public Database API Key</label>
                 <input
                   type="password"
                   value={configAnonKey}
                   onChange={(e) => setConfigAnonKey(e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  placeholder="••••••••••••••••••••••••••••••••"
                   className="w-full px-3.5 py-2.5 rounded-lg border border-[#cbd5e1] dark:border-slate-700 bg-white dark:bg-slate-800 text-[#0d1c2e] dark:text-white text-xs font-mono focus:outline-none focus:border-[#0f172a]"
                 />
               </div>
@@ -1350,7 +1350,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 {connectionStatus.success ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>Live Supabase ping successful! Round-trip latency: <strong>{connectionStatus.latencyMs} ms</strong>.</span>
+                    <span>Live database connection active! Round-trip latency: <strong>{connectionStatus.latencyMs} ms</strong>.</span>
                   </>
                 ) : (
                   <>
@@ -1576,7 +1576,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </div>
 
             <p className="text-xs text-red-900 dark:text-red-300 bg-red-50 dark:bg-red-950/40 p-3 rounded-lg border border-red-200 dark:border-red-800/50 leading-relaxed font-mono">
-              <strong>Warning:</strong> This will permanently delete this record from the Supabase database. This action is irreversible and will be logged in the Administrator Audit Log.
+              <strong>Warning:</strong> This will permanently delete this record from the system database. This action is irreversible and will be logged in the Administrator Audit Log.
             </p>
 
             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#e2e8f0] dark:border-slate-800">

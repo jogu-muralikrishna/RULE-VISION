@@ -275,7 +275,7 @@ export const authService = {
           if (cleanEmail === 'admin@iare.com' && error.message.toLowerCase().includes('invalid login')) {
             return {
               success: false,
-              error: 'Invalid credentials. If you have not created the admin account in Supabase yet, run the SQL seed script in supabase/migrations/20260926_create_admin_and_audit_logs.sql.'
+              error: 'Invalid credentials. Please verify your administrative email and password.'
             };
           }
           return { success: false, error: error.message };

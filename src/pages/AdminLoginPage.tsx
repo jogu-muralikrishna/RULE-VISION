@@ -7,13 +7,10 @@ import {
   Sun,
   Moon,
   AlertCircle,
-  CheckCircle2,
-  KeyRound,
   Eye,
   EyeOff,
   ArrowLeft,
-  Database,
-  Info
+  Database
 } from 'lucide-react';
 import { authService } from '../services/authService';
 import { UserProfile } from '../types';
@@ -32,12 +29,11 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
   isDarkMode,
   onToggleTheme
 }) => {
-  const [email, setEmail] = useState('admin@iare.com');
-  const [password, setPassword] = useState('murali@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [showSqlSeedModal, setShowSqlSeedModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +41,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
     setLoading(true);
 
     try {
-      // Authenticates securely via Supabase Auth and validates trusted role = 'admin'
+      // Authenticates securely and validates trusted role = 'admin'
       const res = await authService.signIn(email, password, 'admin');
 
       if (res.success && res.user) {
@@ -55,10 +51,10 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
           onLoginSuccess(res.user);
         }
       } else {
-        setErrorMessage(res.error || 'Authentication failed. Please verify your credentials in Supabase Auth.');
+        setErrorMessage(res.error || 'Authentication failed. Please verify your administrative credentials.');
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Unable to connect to Supabase authentication server.');
+      setErrorMessage(err?.message || 'Unable to connect to the authentication server. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -116,7 +112,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
               Administrator Login
             </h1>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Authenticate with your verified Supabase Administrator credentials to access user management, audit logs, and system registries.
+              Authenticate with your verified administrative credentials to access user management, audit logs, and system registries.
             </p>
           </div>
 
@@ -126,15 +122,6 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
               <div className="space-y-1 flex-1">
                 <span>{errorMessage}</span>
-                {errorMessage.includes('SQL seed') && (
-                  <button
-                    type="button"
-                    onClick={() => setShowSqlSeedModal(true)}
-                    className="block text-[11px] text-slate-800 underline hover:text-slate-950 font-semibold pt-1 cursor-pointer"
-                  >
-                    View Supabase SQL Seed Script →
-                  </button>
-                )}
               </div>
             </div>
           )}
@@ -151,7 +138,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@iare.com"
+                placeholder="administrator@agency.gov"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50/60 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 transition-all font-mono"
               />
             </div>
@@ -197,22 +184,15 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
             </button>
           </form>
 
-          {/* Security & Setup Info Box */}
+          {/* Security Info Box */}
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-1.5 text-slate-600">
             <div className="flex items-center gap-1.5 text-slate-900 font-semibold text-[11px] font-display">
               <Database className="w-3.5 h-3.5 text-slate-700" />
               <span>Role-Based Access Control (RBAC)</span>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-500">
-              Session is verified through Supabase Auth. The system ensures the account has <strong className="text-slate-800 font-mono">role = 'admin'</strong> in the database before granting access.
+              Session is verified through secure authentication. Access to management consoles and audit logs is strictly restricted to authorized system administrators.
             </p>
-            <button
-              type="button"
-              onClick={() => setShowSqlSeedModal(true)}
-              className="text-[11px] text-slate-800 hover:underline cursor-pointer block font-semibold pt-0.5"
-            >
-              Need to seed admin in Supabase? View SQL Setup Script →
-            </button>
           </div>
         </div>
       </main>
@@ -221,66 +201,6 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
       <footer className="py-3 px-4 sm:px-8 border-t border-slate-200 bg-white text-center text-xs text-slate-500">
         RuleVision Administrative Control Console • Legal Metrology Act, 2009 &amp; PCR 2011
       </footer>
-
-      {/* SQL Setup Instruction Modal */}
-      {showSqlSeedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-xl bg-white rounded-xl border border-slate-200 shadow-xl p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Database className="w-5 h-5 text-slate-800" />
-                <h3 className="text-sm font-bold text-slate-900 font-display">Supabase Admin Account Setup SQL</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSqlSeedModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold p-1 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600">
-              To create the admin user with <strong className="text-slate-900 font-mono">admin@iare.com</strong> and <strong className="text-slate-900 font-mono">murali@123</strong> in your Supabase project, execute this script in <strong>Supabase Dashboard → SQL Editor</strong>:
-            </p>
-
-            <div className="flex-1 overflow-y-auto bg-slate-900 p-3.5 rounded-lg border border-slate-800 text-[11px] font-mono text-emerald-400">
-              <pre className="whitespace-pre-wrap">{`-- Run in Supabase SQL Editor
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--- 1. Ensure user profile exists with admin role
-INSERT INTO public.profiles (
-  id,
-  email,
-  full_name,
-  role,
-  created_at,
-  updated_at
-) VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'admin@iare.com',
-  'Master Administrator',
-  'admin',
-  NOW(),
-  NOW()
-)
-ON CONFLICT (id) DO UPDATE SET
-  role = 'admin',
-  updated_at = NOW();`}</pre>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowSqlSeedModal(false)}
-                className="px-3.5 py-1.5 rounded-md bg-[#131b2e] hover:bg-[#1e293b] text-white text-xs font-bold cursor-pointer"
-              >
-                Close Instructions
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

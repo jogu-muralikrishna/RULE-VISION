@@ -97,7 +97,7 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
       localStorage.removeItem('rulevision_supabase_anon_key');
     }
 
-    setConfigSuccess('Configuration saved! Reloading application to connect Supabase...');
+    setConfigSuccess('Configuration saved! Reloading application to connect database...');
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -401,11 +401,11 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
                 type="button"
                 onClick={() => setShowConfigModal(true)}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/60 text-xs font-mono cursor-pointer transition-colors"
-                title="Click to view or edit Supabase configuration"
+                title="System Database Connected"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span className="hidden sm:inline">CLOUD CONNECTED</span>
-                <span className="sm:hidden">CLOUD</span>
+                <span className="hidden sm:inline">DATABASE CONNECTED</span>
+                <span className="sm:hidden">CONNECTED</span>
                 <Settings className="w-3 h-3 text-emerald-400" />
               </button>
             ) : (
@@ -413,12 +413,12 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
                 type="button"
                 onClick={() => setShowConfigModal(true)}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-950/60 border border-amber-700/60 text-amber-300 hover:bg-amber-900/60 text-xs font-mono cursor-pointer transition-colors"
-                title="Click to connect Supabase Cloud"
+                title="Configure Database Connection"
               >
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                <span className="hidden sm:inline">DEV MODE (OTP: 123456)</span>
-                <span className="sm:hidden">DEV MODE</span>
-                <span className="text-[10px] underline ml-1 font-bold">CONNECT ⚙️</span>
+                <span className="hidden sm:inline">LOCAL MODE (PASSCODE: 123456)</span>
+                <span className="sm:hidden">LOCAL</span>
+                <span className="text-[10px] underline ml-1 font-bold">DATABASE ⚙️</span>
               </button>
             )}
 
@@ -462,17 +462,17 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
                 <Sparkles className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
                 <div className="flex-1 space-y-1">
                   <div className="font-semibold flex items-center justify-between">
-                    <span>⚡ Development / Demo Simulation</span>
+                    <span>⚡ Demonstration / Local Mode</span>
                     <button
                       type="button"
                       onClick={() => setShowConfigModal(true)}
                       className="underline text-amber-800 hover:text-slate-900 cursor-pointer font-bold"
                     >
-                      Connect Cloud
+                      Configure Database
                     </button>
                   </div>
                   <p className="text-amber-800/80 text-[11px] leading-relaxed">
-                    Supabase credentials are not connected yet. You can test with any email — your verification OTP code is <strong className="text-slate-900 font-mono bg-white px-1 py-0.5 rounded border border-amber-200">123456</strong>.
+                    Database is operating in local mode. For offline demonstration and verification, your test passcode is <strong className="text-slate-900 font-mono bg-white px-1 py-0.5 rounded border border-amber-200">123456</strong>.
                   </p>
                 </div>
               </div>
@@ -854,12 +854,12 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
             onClick={() => setShowConfigModal(true)}
             className="text-slate-700 hover:text-slate-900 underline cursor-pointer"
           >
-            Supabase Settings
+            Database Settings
           </button>
         </div>
       </footer>
 
-      {/* SUPABASE CLOUD CONFIGURATION MODAL */}
+      {/* SYSTEM DATABASE CONFIGURATION MODAL */}
       {showConfigModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="w-full max-w-lg bg-white rounded-xl border border-slate-200 shadow-xl p-6 sm:p-7 space-y-4 relative">
@@ -869,8 +869,8 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
                   <Database className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 font-display">Supabase Cloud Connection</h3>
-                  <p className="text-xs text-slate-500">Configure live Supabase authentication &amp; database</p>
+                  <h3 className="text-sm font-bold text-slate-900 font-display">System Database Configuration</h3>
+                  <p className="text-xs text-slate-500">Configure live system database &amp; authentication</p>
                 </div>
               </div>
               <button
@@ -895,28 +895,28 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
             <form onSubmit={handleSaveConfig} className="space-y-3.5">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                  <span>Supabase Project URL (<code className="text-slate-900 font-mono">VITE_SUPABASE_URL</code>)</span>
+                  <span>Database Endpoint URL (<code className="text-slate-900 font-mono">VITE_SUPABASE_URL</code>)</span>
                   {cfgUrl && <span className="text-[10px] text-emerald-700 font-mono">Configured</span>}
                 </label>
                 <input
                   type="url"
                   value={cfgUrl}
                   onChange={(e) => setCfgUrl(e.target.value)}
-                  placeholder="https://xyzcompany.supabase.co"
+                  placeholder="https://database.agency.gov"
                   className="w-full px-3 py-2 rounded-md border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:border-slate-800 focus:bg-white"
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                  <span>Supabase Anon Public Key (<code className="text-slate-900 font-mono">VITE_SUPABASE_ANON_KEY</code>)</span>
+                  <span>Public API Key (<code className="text-slate-900 font-mono">VITE_SUPABASE_ANON_KEY</code>)</span>
                   {cfgKey && <span className="text-[10px] text-emerald-700 font-mono">Configured</span>}
                 </label>
                 <input
                   type="text"
                   value={cfgKey}
                   onChange={(e) => setCfgKey(e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  placeholder="Enter authorized public API key..."
                   className="w-full px-3 py-2 rounded-md border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:border-slate-800 focus:bg-white"
                 />
               </div>
@@ -924,13 +924,10 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
               <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5">
                 <div className="font-semibold text-slate-900 flex items-center gap-1.5 font-display">
                   <Sparkles className="w-3.5 h-3.5 text-slate-700" />
-                  <span>Credential Location Reference</span>
+                  <span>Configuration Reference</span>
                 </div>
                 <p className="text-[11px] leading-relaxed">
-                  In your Supabase Dashboard (<a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-slate-900 underline inline-flex items-center gap-0.5 font-semibold">supabase.com <ExternalLink className="w-2.5 h-2.5" /></a>), navigate to <strong>Project Settings → API</strong>. Copy the <strong>Project URL</strong> and public <strong>anon key</strong>.
-                </p>
-                <p className="text-[11px] leading-relaxed text-slate-500">
-                  Or paste them directly into <code className="text-slate-800 font-mono">.env</code> in your root directory.
+                  Enter your assigned system database URL and client API key, or define them in your server environment variables.
                 </p>
               </div>
 
@@ -940,14 +937,14 @@ export const InspectorOtpLogin: React.FC<InspectorOtpLoginProps> = ({
                   onClick={handleClearConfig}
                   className="px-3 py-2 rounded-md border border-slate-200 text-xs text-slate-600 hover:text-red-600 hover:border-red-200 transition-colors cursor-pointer"
                 >
-                  Clear / Dev Mode
+                  Reset to Local Mode
                 </button>
 
                 <button
                   type="submit"
                   className="px-4 py-2 rounded-md bg-[#131b2e] hover:bg-[#1e293b] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                 >
-                  Save &amp; Connect Supabase
+                  Save &amp; Connect Database
                 </button>
               </div>
             </form>

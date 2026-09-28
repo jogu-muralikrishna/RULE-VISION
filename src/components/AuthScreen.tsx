@@ -260,7 +260,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 RuleVision delivers automated compliance screening for packaged commodities under the{' '}
                 <strong className="text-slate-900 font-semibold">Legal Metrology Act, 2009</strong> and the{' '}
                 <strong className="text-slate-900 font-semibold">Packaged Commodities Rules (PCR), 2011</strong>. 
-                Perform high-precision label OCR, verify statutory declarations, and generate official court-ready audit dossiers.
+                Perform high-precision package image analysis, verify statutory declarations, and generate official court-ready audit dossiers.
               </p>
             </div>
 
@@ -314,7 +314,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5 shadow-xs">
                 <Cpu className="w-4 h-4 text-slate-800" />
-                <h2 className="text-xs font-bold text-slate-900 font-display">Multimodal AI OCR</h2>
+                <h2 className="text-xs font-bold text-slate-900 font-display">Text Extraction</h2>
                 <p className="text-[11px] text-slate-500 leading-tight">
                   High-accuracy recognition for curved, reflective, or cylindrical packaging surfaces.
                 </p>
@@ -322,7 +322,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
               <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5 shadow-xs">
                 <FileCheck2 className="w-4 h-4 text-emerald-600" />
-                <h2 className="text-xs font-bold text-slate-900 font-display">Rule Engine</h2>
+                <h2 className="text-xs font-bold text-slate-900 font-display">Rule-Based Verification</h2>
                 <p className="text-[11px] text-slate-500 leading-tight">
                   Evaluates mandatory declarations against legal rules with statutory infraction scoring.
                 </p>
@@ -457,62 +457,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
-                  {/* Master Admin Portal Credentials & Quick Access Banner */}
-                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 font-display">
-                        <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
-                        Master Administrator Portal
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-                        admin@iare.com
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-slate-600">
-                      <span className="text-[11px] font-mono">
-                        Pass: <strong className="text-slate-900 font-mono">murali@123</strong>
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEmail('admin@iare.com');
-                            setPassword('murali@123');
-                            setErrorMessage(null);
-                          }}
-                          className="px-2 py-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-semibold cursor-pointer transition-colors"
-                        >
-                          Auto-Fill
-                        </button>
-                        <button
-                          type="button"
-                          disabled={loading}
-                          onClick={async () => {
-                            setEmail('admin@iare.com');
-                            setPassword('murali@123');
-                            setErrorMessage(null);
-                            setLoading(true);
-                            try {
-                              const res = await authService.signIn('admin@iare.com', 'murali@123');
-                              if (res.success && res.user) {
-                                onLoginSuccess(res.user);
-                              } else {
-                                setErrorMessage(res.error || 'Failed to authenticate admin.');
-                              }
-                            } finally {
-                              setLoading(false);
-                            }
-                          }}
-                          className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold shadow-xs cursor-pointer transition-all flex items-center gap-1"
-                        >
-                          <span>1-Click Login</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Inspector Portal Login Divider & Button */}
                   <div className="relative flex items-center justify-center pt-1">
                     <div className="border-t border-slate-200 w-full" />
@@ -521,6 +465,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     </span>
                     <div className="border-t border-slate-200 w-full" />
                   </div>
+
 
                   <button
                     type="button"
